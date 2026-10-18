@@ -1,0 +1,126 @@
+@startuml
+left to right direction
+
+skinparam defaultFontName "Segoe UI, Arial, sans-serif"
+skinparam defaultFontSize 14
+skinparam shadowing false
+skinparam roundcorner 20
+skinparam ArrowColor #34495E
+skinparam ArrowThickness 1.5
+skinparam nodesep 45
+skinparam ranksep 90
+
+skinparam usecase {
+    BorderColor #7F8C8D
+    BorderThickness 1.2
+}
+
+skinparam actor {
+    BackgroundColor #FFFFFF
+    BorderColor #2C3E50
+    BorderThickness 2
+}
+
+actor "Кандидат" as Cand
+actor "Співробітник" as Emp
+actor "Керівник відділу" as Mgr
+actor "HR-менеджер" as HR
+
+actor "Системний\nпланувальник" as Sys <<Timer>>
+
+rectangle "StaffFlow — HRM Система" {
+    
+    ' 1. Аутентифікація
+    usecase "Авторизація в системі" as UC_Auth #EAECEE
+    usecase "Вхід через SSO" as UC_SSO #EAECEE
+    usecase "Локальний вхід" as UC_Local #EAECEE
+    UC_Auth <.. UC_SSO : <<extend>>
+    UC_Auth <.. UC_Local : <<extend>>
+    
+    ' 2. Рекрутинг
+    usecase "Подача заявки" as UC_Apply #FCF3CF
+    usecase "Завантаження резюме" as UC_CV #FCF3CF
+    usecase "Проведення співбесіди" as UC_Interview #FCF3CF
+    UC_Apply ..> UC_CV : <<include>>
+    UC_Apply <.. UC_Interview : <<extend>>
+    
+    ' 3. Employee Self-Service
+    usecase "Керування робочим часом" as UC_Time #D6EAF8
+    usecase "Запит на овертайм" as UC_Overtime #D6EAF8
+    UC_Time <.. UC_Overtime : <<extend>>
+
+    usecase "Управління відсутністю" as UC_Absence #D6EAF8
+    usecase "Перевірка балансу днів" as UC_CheckBal #D6EAF8
+    usecase "Оформлення лікарняного" as UC_Sick #D6EAF8
+    usecase "Завантаження мед. довідки" as UC_Cert #D6EAF8
+    UC_Absence ..> UC_CheckBal : <<include>>
+    UC_Absence <.. UC_Sick : <<extend>>
+    UC_Sick ..> UC_Cert : <<include>>
+    
+    ' 4. Managerial Operations
+    usecase "Обробка запитів команди" as UC_Team #D1F2EB
+    usecase "Ухвалення запиту" as UC_Approve #D1F2EB
+    usecase "Відхилення запиту" as UC_Reject #D1F2EB
+    usecase "Оцінка продуктивності" as UC_Review #D1F2EB
+    usecase "Встановлення KPI" as UC_KPI #D1F2EB
+    UC_Team <.. UC_Approve : <<extend>>
+    UC_Team <.. UC_Reject : <<extend>>
+    UC_Review ..> UC_KPI : <<include>>
+
+    ' 5. HR-адміністрування
+    usecase "Оформлення найму" as UC_Hire #E8DAEF
+    usecase "Процес онбордингу" as UC_Onboard #E8DAEF
+    UC_Hire ..> UC_Onboard : <<include>>
+    
+    usecase "Оформлення звільнення" as UC_Offboard #E8DAEF
+    usecase "Анулювання доступу" as UC_Revoke #E8DAEF
+    UC_Offboard ..> UC_Revoke : <<include>>
+    
+    usecase "Розрахунок ЗП" as UC_Payroll #E8DAEF
+    usecase "Розрахунок податків" as UC_Taxes #E8DAEF
+    usecase "Генерація банк. відомості" as UC_BankExport #E8DAEF
+    UC_Payroll ..> UC_Taxes : <<include>>
+    UC_Payroll ..> UC_BankExport : <<include>>
+    
+    ' 6. Системні сповіщення 
+    usecase "Генерація email-сповіщення" as UC_Notify #FADBD8
+    UC_Approve ..> UC_Notify : <<include>>
+    UC_Reject ..> UC_Notify : <<include>>
+    UC_Revoke ..> UC_Notify : <<include>>
+    UC_Hire ..> UC_Notify : <<include>>
+}
+
+actor "Поштовий шлюз" as ExtMail <<External System>>
+actor "Банківське API" as ExtBank <<External API>>
+
+Cand --> UC_Apply
+
+Emp --> UC_Auth
+Emp --> UC_Time
+Emp --> UC_Absence
+
+Mgr --> UC_Auth
+Mgr --> UC_Team
+Mgr --> UC_Review
+
+HR --> UC_Auth
+HR --> UC_Hire
+HR --> UC_Offboard
+HR --> UC_Payroll
+HR --> UC_Interview
+
+Sys --> UC_Payroll
+
+UC_Notify --> ExtMail
+UC_BankExport --> ExtBank
+
+legend right
+    |= Колір |= Рівень доступу / Модуль |
+    |<back:#EAECEE>   </back>| Аутентифікація |
+    |<back:#FCF3CF>   </back>| Рекрутинг (Кандидат) |
+    |<back:#D6EAF8>   </back>| Employee Self-Service (Співробітник) |
+    |<back:#D1F2EB>   </back>| Управління командою (Керівник) |
+    |<back:#E8DAEF>   </back>| Кадрове адміністрування (HR) |
+    |<back:#FADBD8>   </back>| Автоматичні системні дії |
+endlegend
+@enduml
