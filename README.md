@@ -23,9 +23,15 @@ StaffFlow is a comprehensive HRM web application designed to streamline employee
 
 The application architecture relies on a strict separation of concerns among different user roles (Employees, Managers, HR, Candidates) and external APIs. 
 
-Detailed documentation of the business processes, including `<<include>>` and `<<extend>>` relationships, can be found in our [Use Case Documentation](docs/use_cases.md).
+### 1. Business Processes (Use Cases)
+Defines user roles and core system workflows (`<<include>>` and `<<extend>>`).
+* 📄 [Read Use Case Documentation](docs/use_cases.md)
+* 🖼️ **Diagram:** `docs/diagrams/use_case.png`
 
-![Use Case Diagram](docs/diagrams/use_case.png)
+### 2. Class Architecture (UML & GoF Patterns)
+Illustrates the Layered Architecture, REST controllers, and the implementation of 5 GoF patterns (Facade, State, Strategy, Composite, Factory Method) adhering to SOLID principles.
+* 📄 [Read Class Architecture Documentation](docs/class_diagram.md)
+* 🖼️ **Diagram:** `docs/diagrams/class.png`
 
 ## 📂 Project Structure
 
