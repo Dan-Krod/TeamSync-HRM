@@ -1,0 +1,227 @@
+@startuml
+top to bottom direction
+
+skinparam defaultFontName "Segoe UI, Arial, sans-serif"
+skinparam classAttributeIconSize 0
+skinparam roundcorner 12
+skinparam shadowing true
+skinparam nodesep 60
+skinparam ranksep 80
+
+skinparam package {
+    BackgroundColor #FAFCFC
+    BorderColor #BDC3C7
+    FontSize 15
+    FontStyle bold
+    FontColor #2C3E50
+}
+
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #34495E
+    BorderThickness 1.5
+    HeaderBackgroundColor #EAECEE
+    FontColor #2C3E50
+}
+
+skinparam note {
+    BackgroundColor #FEF9E7
+    BorderColor #F1C40F
+}
+
+' 1. REST API CONTROLLERS
+package "API & Controllers (Web Layer)" {
+    
+    class EmployeeController <<GRASP: Controller>> {
+        - facade: OnboardingFacade
+        + createEmployee(data: JSON): Response
+        + getEmployee(id: Int): Response
+    }
+    
+    class LeaveController <<GRASP: Controller>> {
+        - leaveService: LeaveRequest
+        + submitRequest(data: JSON): Response
+        + approveRequest(id: Int): Response
+    }
+}
+
+' 2. FACADE PATTERN (Onboarding Module)
+package "HR & Onboarding Module" {
+    class OnboardingFacade <<Facade>> #FADBD8 {
+        - repository: IEmployeeRepository
+        - docFactory: DocumentFactory
+        + onboardNewEmployee(dto: EmployeeDTO): Boolean
+    }
+    note left of OnboardingFacade
+      <b>Facade (GoF)</b>
+      Делегує складні підпроцеси
+      створення, збереження та 
+      документації іншим класам.
+    end note
+}
+
+' 3. COMPOSITE PATTERN (Organization)
+package "Organization Structure" {
+    interface IOrganizationUnit <<Composite Component>> #D4E6F1 {
+        + getBudget(): Decimal
+        + getHeadcount(): Int
+    }
+    
+    class Employee <<Leaf>> #D4E6F1 {
+        - id: Int
+        - name: String
+        - position: String
+        - salary: Decimal
+        + getBudget(): Decimal
+        + getHeadcount(): Int
+    }
+    
+    class Department <<Composite>> #D4E6F1 {
+        - name: String
+        - units: List<IOrganizationUnit>
+        + addUnit(u: IOrganizationUnit): void
+        + getBudget(): Decimal
+        + getHeadcount(): Int
+    }
+}
+
+' 4. STATE PATTERN (Leave Management)
+package "Leave Management Module" {
+    class LeaveRequest <<Context>> #D1F2EB {
+        - id: Int
+        - employeeId: Int
+        - state: ILeaveState
+        + changeState(s: ILeaveState): void
+        + process(): void
+        + cancel(): void
+    }
+    
+    interface ILeaveState <<State>> #D1F2EB {
+        + process(ctx: LeaveRequest): void
+        + cancel(ctx: LeaveRequest): void
+    }
+    
+    class PendingState #D1F2EB {
+        + process(ctx: LeaveRequest): void
+        + cancel(ctx: LeaveRequest): void
+    }
+    
+    class ApprovedState #D1F2EB {
+        + process(ctx: LeaveRequest): void
+        + cancel(ctx: LeaveRequest): void
+    }
+}
+
+' 5. STRATEGY PATTERN (Payroll Module)
+package "Payroll System" {
+    class PayrollService <<Context>> #FCF3CF {
+        - strategy: IPayrollStrategy
+        + setStrategy(s: IPayrollStrategy): void
+        + calculateSalary(emp: Employee): Decimal
+    }
+    
+    interface IPayrollStrategy <<Strategy>> #FCF3CF {
+        + calculate(emp: Employee): Decimal
+    }
+    note bottom of IPayrollStrategy
+      <b>Strategy (GoF) + Open/Closed (SOLID)</b>
+      Легке додавання нових типів оплати 
+      без зміни базового сервісу.
+    end note
+    
+    class FullTimeStrategy #FCF3CF {
+        + calculate(emp: Employee): Decimal
+    }
+    
+    class HourlyStrategy #FCF3CF {
+        + calculate(emp: Employee): Decimal
+    }
+}
+
+' 6. FACTORY METHOD (Document Gen)
+package "Document Generator" {
+    abstract class DocumentFactory <<Creator>> #E8DAEF {
+        + {abstract} createDocument(type: String): IDocument
+        + generateAndSign(type: String): void
+    }
+    
+    class HRDocumentFactory #E8DAEF {
+        + createDocument(type: String): IDocument
+    }
+    
+    interface IDocument <<Product>> #E8DAEF {
+        + generateContent(): String
+        + exportPDF(): File
+    }
+    
+    class ContractDocument #E8DAEF {
+        + generateContent(): String
+        + exportPDF(): File
+    }
+}
+
+' 7. REPOSITORY (Data Access Layer)
+package "Data Access (Persistence)" {
+    interface IEmployeeRepository <<Repository>> {
+        + save(emp: Employee): Boolean
+        + findById(id: Int): Employee
+    }
+    note bottom of IEmployeeRepository
+      <b>Dependency Inversion (SOLID)</b>
+      Бізнес-логіка не залежить від 
+      конкретної бази даних (Postgres).
+    end note
+    
+    class PostgresEmployeeRepo {
+        - db: DBConnection
+        + save(emp: Employee): Boolean
+        + findById(id: Int): Employee
+    }
+}
+
+' ВЗАЄМОДІЯ ТА ЗВ'ЯЗКИ
+
+' API -> Logic
+EmployeeController ..> OnboardingFacade : <<use>>
+LeaveController ..> LeaveRequest : <<use>>
+
+' Facade -> Internal Modules
+OnboardingFacade ..> Employee : <<create>>
+OnboardingFacade ..> DocumentFactory : <<use>>
+OnboardingFacade --> IEmployeeRepository : <<inject>>
+
+' Composite
+IOrganizationUnit <|.. Employee : implements
+IOrganizationUnit <|.. Department : implements
+Department o--> IOrganizationUnit : contains
+
+' State
+LeaveRequest *--> ILeaveState : has a
+ILeaveState <|.. PendingState : implements
+ILeaveState <|.. ApprovedState : implements
+
+' Strategy
+PayrollService o--> IPayrollStrategy : uses
+IPayrollStrategy <|.. FullTimeStrategy : implements
+IPayrollStrategy <|.. HourlyStrategy : implements
+
+' Factory Method
+DocumentFactory <|-- HRDocumentFactory : extends
+HRDocumentFactory ..> ContractDocument : <<instantiate>>
+IDocument <|.. ContractDocument : implements
+DocumentFactory ..> IDocument : <<use>>
+
+' Data Access
+IEmployeeRepository <|.. PostgresEmployeeRepo : implements
+
+' ЛЕГЕНДА
+legend right
+    |= Колір |= Патерн GoF |= Роль у системі HRM |
+    |<back:#FADBD8>   </back>| <b>Facade</b> | Єдина точка входу для онбордингу |
+    |<back:#D4E6F1>   </back>| <b>Composite</b> | Деревоподібна оргструктура компанії |
+    |<back:#D1F2EB>   </back>| <b>State</b> | Життєвий цикл заявки на відпустку |
+    |<back:#FCF3CF>   </back>| <b>Strategy</b> | Динамічний розрахунок ЗП та податків |
+    |<back:#E8DAEF>   </back>| <b>Factory Method</b>| Генерація кадрових документів |
+endlegend
+
+@enduml
