@@ -19,6 +19,25 @@ StaffFlow is a comprehensive HRM web application designed to streamline employee
 *   **Database:** PostgreSQL / SQLite
 *   **Architecture & Patterns:** GoF Design Patterns, GRASP, SOLID principles.
 
+## 🏗 System Architecture & Use Cases
+
+The application architecture relies on a strict separation of concerns among different user roles (Employees, Managers, HR, Candidates) and external APIs. 
+
+### 1. Business Processes (Use Cases)
+Defines user roles and core system workflows (`<<include>>` and `<<extend>>`).
+* 📄 [Read Use Case Documentation](docs/use_cases.md)
+* 🖼️ **Diagram:** `docs/diagrams/use_case.png`
+
+### 2. Class Architecture (UML & GoF Patterns)
+Illustrates the Layered Architecture, REST controllers, and the implementation of 5 GoF patterns (Facade, State, Strategy, Composite, Factory Method) adhering to SOLID principles.
+* 📄 [Read Class Architecture Documentation](docs/class_diagram.md)
+* 🖼️ **Diagram:** `docs/diagrams/class.png`
+
+### 3. Database Schema (ER Diagram)
+A robust relational database schema consisting of 8 tables, designed to support multiple business roles and modular scaling (e.g., isolated recruitment data).
+* 📄 [Read Database Schema Documentation](docs/database_schema.md)
+* 🖼️ **Diagram:** `docs/database/schema.png`
+
 ## 📂 Project Structure
 
 *(To be populated as the project evolves)*
