@@ -15,6 +15,9 @@ def create_app(config_class=Config):
     
     with app.app_context():
         from app.models import models
+        
+    from app.routes.employee_routes import employee_bp
+    app.register_blueprint(employee_bp)
 
     @app.route('/api/health')
     def health_check():
