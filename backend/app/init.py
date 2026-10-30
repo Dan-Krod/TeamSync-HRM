@@ -12,6 +12,9 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     ma.init_app(app)
+    
+    with app.app_context():
+        from app.models import models
 
     @app.route('/api/health')
     def health_check():
