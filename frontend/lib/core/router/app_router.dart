@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../shared/widgets/app_layout.dart';
+import '../../features/employees/views/employees_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -21,7 +22,7 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/employees',
-          builder: (context, state) => const Text('Вміст: Список співробітників', style: TextStyle(fontSize: 24)),
+          builder: (context, state) => const EmployeesScreen(),
         ),
         GoRoute(
           path: '/recruiting',

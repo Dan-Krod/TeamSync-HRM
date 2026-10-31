@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flasgger import Swagger
 from configure import Config
+from flask_cors import CORS
 
 db = SQLAlchemy()
 ma = Marshmallow()
@@ -11,6 +12,8 @@ swagger = Swagger()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    CORS(app)
 
     db.init_app(app)
     ma.init_app(app)

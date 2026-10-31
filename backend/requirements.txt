@@ -4,3 +4,4 @@ Flask-Marshmallow==1.2.1
 marshmallow-sqlalchemy==0.29.0
 flasgger==0.9.7.1
 Faker==20.0.0
+Flask-CORS==5.0.0
