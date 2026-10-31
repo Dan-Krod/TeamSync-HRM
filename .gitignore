@@ -1,26 +1,36 @@
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# =====================================================================
+# IDEs & System files
+# =====================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.log
 
-# Python
+# =====================================================================
+# Python / Backend
+# =====================================================================
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
+
+/venv/
+/backend/venv/
+/.venv/
+/backend/.venv/
+/env/
+/backend/env/
+
+/build/
 develop-eggs/
 dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
 parts/
 sdist/
 var/
@@ -29,20 +39,25 @@ wheels/
 .installed.cfg
 *.egg
 
-# Flutter/Dart
-.dart_tool/
-.packages
-.pub-cache/
-.pub/
-/build/
-flutter_*.png
-*.log
-*.sqlite
+*.db
+*.sqlite3
+.env
+backend/.env
 
-# IDEs
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-.DS_Store
+# =====================================================================
+# Flutter / Frontend
+# =====================================================================
+**/frontend/.dart_tool/
+**/frontend/.packages
+**/frontend/.pub-cache/
+**/frontend/.pub/
+**/frontend/build/
+**/frontend/.flutter-plugins-dependencies
+**/frontend/app.*.symbols
+**/frontend/app.*.map.json
+**/frontend/coverage/
+
+!**/frontend/lib/**
+!**/frontend/web/**
+!**/frontend/test/**
+!**/frontend/pubspec.yaml
