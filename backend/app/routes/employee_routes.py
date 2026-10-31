@@ -80,3 +80,59 @@ def create_employee():
         return jsonify(employee_schema.dump(new_employee)), 201
     except Exception as e:
         return jsonify({"error": str(e)}), 400
+      
+@employee_bp.route('/<int:id>', methods=['PUT'])
+def update_employee(id):
+    """
+    Оновити дані співробітника
+    ---
+    parameters:
+      - in: path
+        name: id
+        required: true
+        type: integer
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: EmployeeUpdate
+          type: object
+          properties:
+            position:
+              type: string
+            salary:
+              type: number
+            role:
+              type: string
+    responses:
+      200:
+        description: Дані успішно оновлено
+    """
+    employee = Employee.query.get_or_404(id)
+    data = request.get_json()
+    
+    for key, value in data.items():
+        if hasattr(employee, key):
+            setattr(employee, key, value)
+            
+    db.session.commit()
+    return jsonify(employee_schema.dump(employee)), 200
+
+@employee_bp.route('/<int:id>', methods=['DELETE'])
+def delete_employee(id):
+    """
+    Видалити співробітника (Звільнення)
+    ---
+    parameters:
+      - in: path
+        name: id
+        required: true
+        type: integer
+    responses:
+      200:
+        description: Співробітника видалено з системи
+    """
+    employee = Employee.query.get_or_404(id)
+    db.session.delete(employee)
+    db.session.commit()
+    return jsonify({"message": f"Співробітника {id} успішно видалено"}), 200

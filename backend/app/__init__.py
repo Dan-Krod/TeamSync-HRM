@@ -2,12 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flasgger import Swagger
-from config import Config
-from app.routes.leave_routes import leave_bp          
-from app.routes.attendance_routes import attendance_bp 
-from app.routes.candidate_routes import candidate_bp
-from app.routes.employee_routes import employee_bp
-from app.routes.report_routes import report_bp
+from configure import Config
 
 db = SQLAlchemy()
 ma = Marshmallow()
@@ -19,15 +14,21 @@ def create_app(config_class=Config):
 
     db.init_app(app)
     ma.init_app(app)
-    swagger.init_app(app) # Ініціалізація Swagger UI
+    swagger.init_app(app)
 
     with app.app_context():
         from app.models import models
+
+    from app.routes.employee_routes import employee_bp
+    from app.routes.report_routes import report_bp
+    from app.routes.leave_routes import leave_bp
+    from app.routes.attendance_routes import attendance_bp
+    from app.routes.candidate_routes import candidate_bp
     
     app.register_blueprint(employee_bp)
     app.register_blueprint(report_bp)
-    app.register_blueprint(leave_bp)          
-    app.register_blueprint(attendance_bp)    
+    app.register_blueprint(leave_bp)
+    app.register_blueprint(attendance_bp)
     app.register_blueprint(candidate_bp)
 
     return app
