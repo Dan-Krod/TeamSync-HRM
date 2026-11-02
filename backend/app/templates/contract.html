@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Трудовий договір</title>
+    <title>Employment Contract</title>
     <style>
         body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
         h1 { text-align: center; }
@@ -10,16 +10,16 @@
     </style>
 </head>
 <body>
-    <h1>ТРУДОВИЙ ДОГОВІР</h1>
-    <p>Цей договір укладено між StaffFlow HRM та <strong>{{ emp.first_name }} {{ emp.last_name }}</strong>.</p>
-    <p><strong>Посада:</strong> {{ emp.position }}</p>
-    <p><strong>Відділ:</strong> {{ emp.department.name if emp.department else 'Не призначено' }}</p>
-    <p><strong>Заробітна плата:</strong> {{ emp.salary }} грн/міс</p>
-    <p><strong>Дата початку:</strong> {{ emp.hire_date }}</p>
+    <h1>EMPLOYMENT CONTRACT</h1>
+    <p>This contract is made between StaffFlow HRM and <strong>{{ emp.first_name }} {{ emp.last_name }}</strong>.</p>
+    <p><strong>Position:</strong> {{ emp.position }}</p>
+    <p><strong>Department:</strong> {{ emp.department.name if emp.department else 'Not assigned' }}</p>
+    <p><strong>Salary:</strong> {{ emp.salary }} UAH/month</p>
+    <p><strong>Start Date:</strong> {{ emp.hire_date }}</p>
     
     <div class="footer">
-        <p>Підпис роботодавця: ___________________</p>
-        <p>Підпис працівника: ___________________</p>
+        <p>Employer Signature: ___________________</p>
+        <p>Employee Signature: ___________________</p>
     </div>
 </body>
 </html>

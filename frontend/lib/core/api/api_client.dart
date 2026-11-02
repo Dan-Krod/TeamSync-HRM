@@ -59,4 +59,12 @@ class ApiClient {
       throw Exception(errorBody['error'] ?? 'Помилка сервера: ${response.statusCode}');
     }
   }
+
+  static Future<http.Response> getFile(String endpoint) async {
+    final headers = await _getHeaders();
+    return await http.get(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: headers,
+    );
+  }
 }

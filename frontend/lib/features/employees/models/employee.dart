@@ -4,7 +4,7 @@ class Employee {
   final String lastName;
   final String email;
   final String position;
-  final String role;
+  final double salary;
 
   Employee({
     required this.id,
@@ -12,17 +12,17 @@ class Employee {
     required this.lastName,
     required this.email,
     required this.position,
-    required this.role,
+    required this.salary, 
   });
 
   factory Employee.fromJson(Map<String, dynamic> json) {
     return Employee(
-      id: json['id'] ?? 0,
+      id: json['id'],
       firstName: json['first_name'] ?? '',
       lastName: json['last_name'] ?? '',
       email: json['email'] ?? '',
       position: json['position'] ?? '',
-      role: json['role'] ?? 'user',
+      salary: (json['salary'] ?? 0).toDouble(), 
     );
   }
 }

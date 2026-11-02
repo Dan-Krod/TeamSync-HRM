@@ -16,7 +16,7 @@ def create_app(config_class=Config):
     
     CORS(app)
     
-    app.config['JWT_SECRET_KEY'] = 'super-secret-hrm-key-2026' 
+    app.config['JWT_SECRET_KEY'] = 'super-secret-hrm-key-2026-very-secure' 
     wt = JWTManager(app)
 
     db.init_app(app)
