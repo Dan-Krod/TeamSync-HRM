@@ -1,3 +1,4 @@
+import json
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models.models import LeaveRequest
@@ -12,16 +13,14 @@ leaves_schema = LeaveRequestSchema(many=True)
 @leave_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_leave():
-    """Створення заявки працівником"""
-    current_user = get_jwt_identity()
+    current_user = json.loads(get_jwt_identity())
     data = request.get_json()
-    
     new_leave = LeaveRequest(
         employee_id=current_user['id'],
         type=data.get('type', 'annual'),
         start_date=data['start_date'],
         end_date=data['end_date'],
-        status='pending' # Початковий стан
+        status='pending'
     )
     db.session.add(new_leave)
     db.session.commit()
@@ -30,8 +29,7 @@ def create_leave():
 @leave_bp.route('/', methods=['GET'])
 @jwt_required()
 def get_leaves():
-    """Отримання списку заявок (HR бачить всі, юзер - лише свої)"""
-    current_user = get_jwt_identity()
+    current_user = json.loads(get_jwt_identity())
     if current_user['role'] in ['hr', 'admin']:
         leaves = LeaveRequest.query.all()
     else:
@@ -41,11 +39,9 @@ def get_leaves():
 @leave_bp.route('/<int:id>/approve', methods=['PUT'])
 @jwt_required()
 def approve_leave(id):
-    """Погодити заявку (лише HR/Admin)"""
-    current_user = get_jwt_identity()
+    current_user = json.loads(get_jwt_identity())
     if current_user['role'] not in ['hr', 'admin']:
         return jsonify({"error": "Немає прав доступу"}), 403
-
     leave_req = LeaveRequest.query.get_or_404(id)
     try:
         manager = LeaveRequestManager(leave_req)
@@ -58,11 +54,9 @@ def approve_leave(id):
 @leave_bp.route('/<int:id>/reject', methods=['PUT'])
 @jwt_required()
 def reject_leave(id):
-    """Відхилити заявку (лише HR/Admin)"""
-    current_user = get_jwt_identity()
+    current_user = json.loads(get_jwt_identity())
     if current_user['role'] not in ['hr', 'admin']:
         return jsonify({"error": "Немає прав доступу"}), 403
-
     leave_req = LeaveRequest.query.get_or_404(id)
     try:
         manager = LeaveRequestManager(leave_req)

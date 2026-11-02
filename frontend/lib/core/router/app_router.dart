@@ -8,6 +8,7 @@ import '../../features/reports/views/reports_screen.dart';
 import '../../features/dashboard/views/dashboard_screen.dart';
 import '../../features/auth/views/login_screen.dart';
 import '../../features/cabinet/views/cabinet_screen.dart';
+import '../../features/leaves/views/leaves_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -58,6 +59,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/cabinet',
           builder: (context, state) => const CabinetScreen(),
+        ),
+        GoRoute(
+          path: '/leaves',
+          pageBuilder: (context, state) => const NoTransitionPage(child: LeavesScreen()),
         ),
       ],
     ),
