@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import '../../shared/widgets/app_layout.dart';
 import '../../features/employees/views/employees_screen.dart';
 import '../../features/recruiting/views/recruiting_screen.dart';
+import '../../features/reports/views/reports_screen.dart';
+import '../../features/dashboard/views/dashboard_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -19,7 +21,7 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => const Text('Вміст: Дашборд', style: TextStyle(fontSize: 24)),
+          builder: (context, state) => const DashboardScreen(),
         ),
         GoRoute(
           path: '/employees',
@@ -31,7 +33,7 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/reports',
-          builder: (context, state) => const Text('Вміст: Аналітика', style: TextStyle(fontSize: 24)),
+          builder: (context, state) => const ReportsScreen(),
         ),
       ],
     ),

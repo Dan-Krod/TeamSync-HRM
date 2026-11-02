@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 from app.models.models import Department, Employee
+from app import db
 from app.services.organization_composite import DepartmentComposite, EmployeeLeaf
 
 from app.models.models import LeaveRequest
