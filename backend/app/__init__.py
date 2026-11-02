@@ -33,6 +33,7 @@ def create_app(config_class=Config):
     from app.routes.candidate_routes import candidate_bp
     from app.routes.auth_routes import auth_bp
     from app.routes.time_routes import time_bp
+    from app.routes.document_routes import document_bp
     
     app.register_blueprint(employee_bp)
     app.register_blueprint(report_bp)
@@ -41,5 +42,6 @@ def create_app(config_class=Config):
     app.register_blueprint(candidate_bp)
     app.register_blueprint(auth_bp)
     app.register_blueprint(time_bp)
+    app.register_blueprint(document_bp)
 
     return app

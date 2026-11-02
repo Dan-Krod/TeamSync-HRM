@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Трудовий договір</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+        h1 { text-align: center; }
+        .footer { margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <h1>ТРУДОВИЙ ДОГОВІР</h1>
+    <p>Цей договір укладено між StaffFlow HRM та <strong>{{ emp.first_name }} {{ emp.last_name }}</strong>.</p>
+    <p><strong>Посада:</strong> {{ emp.position }}</p>
+    <p><strong>Відділ:</strong> {{ emp.department.name if emp.department else 'Не призначено' }}</p>
+    <p><strong>Заробітна плата:</strong> {{ emp.salary }} грн/міс</p>
+    <p><strong>Дата початку:</strong> {{ emp.hire_date }}</p>
+    
+    <div class="footer">
+        <p>Підпис роботодавця: ___________________</p>
+        <p>Підпис працівника: ___________________</p>
+    </div>
+</body>
+</html>

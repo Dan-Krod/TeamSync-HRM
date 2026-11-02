@@ -7,3 +7,4 @@ Faker==20.0.0
 Flask-CORS==5.0.0
 Flask-JWT-Extended==4.6.0
 Werkzeug==3.0.1
+xhtml2pdf==0.2.11
