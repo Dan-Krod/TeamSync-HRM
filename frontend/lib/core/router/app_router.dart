@@ -7,6 +7,7 @@ import '../../features/recruiting/views/recruiting_screen.dart';
 import '../../features/reports/views/reports_screen.dart';
 import '../../features/dashboard/views/dashboard_screen.dart';
 import '../../features/auth/views/login_screen.dart';
+import '../../features/cabinet/views/cabinet_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -36,19 +37,27 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          builder: (context, state) => const DashboardScreen(),
+          pageBuilder: (context, state) => const NoTransitionPage(child: DashboardScreen()),
+        ),
+        GoRoute(
+          path: '/cabinet',
+          pageBuilder: (context, state) => const NoTransitionPage(child: CabinetScreen()),
         ),
         GoRoute(
           path: '/employees',
-          builder: (context, state) => const EmployeesScreen(),
+          pageBuilder: (context, state) => const NoTransitionPage(child: EmployeesScreen()),
         ),
         GoRoute(
           path: '/recruiting',
-          builder: (context, state) => const RecruitingScreen(),
+          pageBuilder: (context, state) => const NoTransitionPage(child: RecruitingScreen()),
         ),
         GoRoute(
           path: '/reports',
-          builder: (context, state) => const ReportsScreen(),
+          pageBuilder: (context, state) => const NoTransitionPage(child: ReportsScreen()),
+        ),
+        GoRoute(
+          path: '/cabinet',
+          builder: (context, state) => const CabinetScreen(),
         ),
       ],
     ),
