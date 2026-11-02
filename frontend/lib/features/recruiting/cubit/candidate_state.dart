@@ -1,29 +1,22 @@
 import 'package:equatable/equatable.dart';
 import '../models/candidate.dart';
 
-abstract class CandidateState extends Equatable {
-  const CandidateState();
-  
+abstract class RecruitingState extends Equatable {
   @override
   List<Object> get props => [];
 }
 
-class CandidateInitial extends CandidateState {}
-
-class CandidateLoading extends CandidateState {}
-
-class CandidateLoaded extends CandidateState {
+class RecruitingInitial extends RecruitingState {}
+class RecruitingLoading extends RecruitingState {}
+class RecruitingLoaded extends RecruitingState {
   final List<Candidate> candidates;
-  const CandidateLoaded(this.candidates);
-
+  RecruitingLoaded(this.candidates);
   @override
   List<Object> get props => [candidates];
 }
-
-class CandidateError extends CandidateState {
+class RecruitingError extends RecruitingState {
   final String message;
-  const CandidateError(this.message);
-
+  RecruitingError(this.message);
   @override
   List<Object> get props => [message];
 }
