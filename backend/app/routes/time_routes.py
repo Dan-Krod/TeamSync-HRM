@@ -1,8 +1,9 @@
+import json
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from app import db
-from app.models.models import TimeRecord
+from app.models.models import TimeRecord, Employee
 
 time_bp = Blueprint('time_bp', __name__, url_prefix='/api/time')
 
@@ -47,3 +48,27 @@ def clock_out():
     db.session.commit()
     
     return jsonify({'message': 'Зміну успішно завершено', 'clock_out': record.clock_out}), 200
+
+@time_bp.route('/', methods=['GET'])
+@jwt_required()
+def get_attendance():
+    current_user = json.loads(get_jwt_identity())
+    
+    # Перевірка доступу (тільки для HR та Admin)
+    if current_user['role'] not in ['hr', 'admin']:
+        return jsonify({"error": "Немає прав доступу"}), 403
+        
+    records = TimeRecord.query.all()
+    result = []
+    
+    for r in records:
+        emp = Employee.query.get(r.employee_id)
+        result.append({
+            'id': r.id,
+            'employee_name': f"{emp.first_name} {emp.last_name}" if emp else "Невідомо",
+            'date': r.date.strftime('%Y-%m-%d') if hasattr(r, 'date') and r.date else '',
+            'clock_in': r.clock_in.strftime('%H:%M') if hasattr(r, 'clock_in') and r.clock_in else '--:--',
+            'clock_out': r.clock_out.strftime('%H:%M') if hasattr(r, 'clock_out') and r.clock_out else '--:--'
+        })
+        
+    return jsonify(result), 200

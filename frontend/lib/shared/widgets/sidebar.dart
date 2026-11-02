@@ -38,6 +38,7 @@ class Sidebar extends StatelessWidget {
               if (isAdminOrHR) _NavItem(title: 'Рекрутинг', icon: Icons.work, route: '/recruiting', currentRoute: currentRoute),
               if (isAdminOrHR) _NavItem(title: 'Звіти', icon: Icons.bar_chart, route: '/reports', currentRoute: currentRoute),
               if (isAdminOrHR) _NavItem(title: 'Відпустки', icon: Icons.beach_access, route: '/leaves', currentRoute: currentRoute),
+              if (isAdminOrHR) _NavItem(title: 'Облік часу', icon: Icons.timer, route: '/attendance', currentRoute: currentRoute),
               const Spacer(),
               const Divider(height: 1),
               ListTile(

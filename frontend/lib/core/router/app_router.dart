@@ -9,6 +9,7 @@ import '../../features/dashboard/views/dashboard_screen.dart';
 import '../../features/auth/views/login_screen.dart';
 import '../../features/cabinet/views/cabinet_screen.dart';
 import '../../features/leaves/views/leaves_screen.dart';
+import '../../features/attendance/views/attendance_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _shellNavigatorKey = GlobalKey<NavigatorState>();
@@ -63,6 +64,10 @@ final GoRouter appRouter = GoRouter(
         GoRoute(
           path: '/leaves',
           pageBuilder: (context, state) => const NoTransitionPage(child: LeavesScreen()),
+        ),
+        GoRoute(
+          path: '/attendance',
+          pageBuilder: (context, state) => const NoTransitionPage(child: AttendanceScreen()),
         ),
       ],
     ),
