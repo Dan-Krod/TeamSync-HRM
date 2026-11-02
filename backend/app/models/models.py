@@ -1,6 +1,7 @@
 from app import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 class Department(db.Model):
     __tablename__ = 'departments'
@@ -93,3 +94,13 @@ class Candidate(db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False)
     resume_url = db.Column(db.String(255))
+    
+class TimeRecord(db.Model):
+    __tablename__ = 'time_records'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    date = db.Column(db.Date, default=datetime.utcnow().date)
+    clock_in = db.Column(db.DateTime, default=datetime.utcnow)
+    clock_out = db.Column(db.DateTime, nullable=True)
+
+    employee = db.relationship('Employee', backref=db.backref('time_records', lazy=True))
