@@ -4,6 +4,7 @@ from flask_marshmallow import Marshmallow
 from flasgger import Swagger
 from configure import Config
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 db = SQLAlchemy()
 ma = Marshmallow()
@@ -14,6 +15,9 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
     
     CORS(app)
+    
+    app.config['JWT_SECRET_KEY'] = 'super-secret-hrm-key-2026' 
+    wt = JWTManager(app)
 
     db.init_app(app)
     ma.init_app(app)

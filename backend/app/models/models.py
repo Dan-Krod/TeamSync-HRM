@@ -1,5 +1,6 @@
 from app import db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 
 class Department(db.Model):
     __tablename__ = 'departments'
@@ -24,6 +25,13 @@ class Employee(db.Model):
     hire_date = db.Column(db.Date, nullable=False)
     role = db.Column(db.String(20), nullable=False) # admin, hr, manager, user
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    password_hash = db.Column(db.String(255), nullable=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
 
     leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True)
     attendances = db.relationship('AttendanceRecord', backref='employee', lazy=True)

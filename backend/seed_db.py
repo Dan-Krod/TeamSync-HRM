@@ -23,8 +23,23 @@ def seed():
         db.session.commit()
 
         employees = []
+        admin_emp = Employee(
+            first_name="Головний",
+            last_name="Адмін",
+            email="admin@staff.com", 
+            phone="+380990000000",
+            position="Директор",
+            salary=100000.00,
+            hire_date=fake.date_between(start_date='-5y', end_date='today'),
+            role='admin',            
+            department_id=departments[0].id
+        )
+        admin_emp.set_password('password123') 
+        db.session.add(admin_emp)
+        employees.append(admin_emp)
+
         roles = ['admin', 'hr', 'manager', 'user']
-        for _ in range(50):
+        for _ in range(49):
             emp = Employee(
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
@@ -36,10 +51,11 @@ def seed():
                 role=random.choice(roles),
                 department_id=random.choice(departments).id
             )
+            emp.set_password('password123') 
             db.session.add(emp)
             employees.append(emp)
+            
         db.session.commit()
-
         manager_ids = [e.id for e in employees if e.role in ['admin', 'manager', 'hr']]
         if not manager_ids:
             manager_ids = [employees[0].id] 
