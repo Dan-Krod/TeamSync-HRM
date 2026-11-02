@@ -64,9 +64,29 @@ def get_attendance():
         result.append({
             'id': r.id,
             'employee_name': f"{emp.first_name} {emp.last_name}" if emp else "Невідомо",
-            'date': r.date.strftime('%Y-%m-%d') if hasattr(r, 'date') and r.date else '',
+            'date': r.record_date.strftime('%Y-%m-%d') if hasattr(r, 'record_date') and r.record_date else '',
             'clock_in': r.clock_in.strftime('%H:%M') if hasattr(r, 'clock_in') and r.clock_in else '--:--',
             'clock_out': r.clock_out.strftime('%H:%M') if hasattr(r, 'clock_out') and r.clock_out else '--:--'
         })
         
     return jsonify(result), 200
+
+@time_bp.route('/status', methods=['GET'])
+@jwt_required()
+def check_status():
+    import json
+    from datetime import datetime
+    
+    current_user = json.loads(get_jwt_identity())
+    emp_id = current_user['id']
+    today = datetime.today().date()
+    
+    # Шукаємо сьогоднішній запис
+    existing = AttendanceRecord.query.filter_by(employee_id=emp_id, record_date=today).first()
+    
+    # Якщо зміна почата, але не завершена — повертаємо True
+    is_working = False
+    if existing and existing.clock_in and not existing.clock_out:
+        is_working = True
+        
+    return jsonify({"is_working": is_working}), 200

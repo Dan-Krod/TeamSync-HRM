@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../router/app_router.dart';
 
 class ApiClient {
   static const String baseUrl = 'http://127.0.0.1:5000/api';
@@ -54,10 +55,19 @@ class ApiClient {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
       return jsonDecode(response.body);
+    } else if (response.statusCode == 401) {
+      _handleUnauthorized();
+      throw Exception('Сесія закінчилась. Увійдіть знову.');
     } else {
       final errorBody = jsonDecode(response.body);
       throw Exception(errorBody['error'] ?? 'Помилка сервера: ${response.statusCode}');
     }
+  }
+
+  static Future<void> _handleUnauthorized() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    appRouter.go('/login');
   }
 
   static Future<http.Response> getFile(String endpoint) async {

@@ -32,11 +32,30 @@ class _CabinetScreenState extends State<CabinetScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userName = prefs.getString('name') ?? 'Співробітник';
-      salary = prefs.getDouble('salary') ?? 0.0;
-    });
+    setState(() => isLoading = true);
+    try {
+      // 1. Отримуємо свіжу зарплату та ім'я
+      final profile = await ApiClient.get('/auth/me');
+      if (profile != null) {
+        setState(() {
+          userName = profile['name'] ?? 'Співробітник';
+          // Безпечно конвертуємо в double
+          salary = (profile['salary'] ?? 0).toDouble(); 
+        });
+      }
+
+      // 2. Отримуємо статус зміни (червона/чорна кнопка)
+      final status = await ApiClient.get('/time/status');
+      if (status != null) {
+        setState(() {
+          isWorking = status['is_working'] ?? false;
+        });
+      }
+    } catch (e) {
+      _showSnackBar('Помилка синхронізації даних', Colors.red);
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   Future<void> _toggleClock() async {

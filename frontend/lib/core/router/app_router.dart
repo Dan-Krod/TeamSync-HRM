@@ -58,10 +58,6 @@ final GoRouter appRouter = GoRouter(
           pageBuilder: (context, state) => const NoTransitionPage(child: ReportsScreen()),
         ),
         GoRoute(
-          path: '/cabinet',
-          builder: (context, state) => const CabinetScreen(),
-        ),
-        GoRoute(
           path: '/leaves',
           pageBuilder: (context, state) => const NoTransitionPage(child: LeavesScreen()),
         ),

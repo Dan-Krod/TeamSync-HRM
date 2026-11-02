@@ -39,7 +39,11 @@ def seed():
         employees.append(admin_emp)
 
         roles = ['admin', 'hr', 'manager', 'user']
+        role_weights = [2, 8, 15, 75] 
+
         for _ in range(49):
+            random_password = fake.password(length=12, special_chars=True, digits=True, upper_case=True, lower_case=True)
+            
             emp = Employee(
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
@@ -48,10 +52,10 @@ def seed():
                 position=fake.job(),
                 salary=round(random.uniform(15000, 80000), 2),
                 hire_date=fake.date_between(start_date='-5y', end_date='today'),
-                role=random.choice(roles),
+                role=random.choices(roles, weights=role_weights, k=1)[0],
                 department_id=random.choice(departments).id
             )
-            emp.set_password('password123') 
+            emp.set_password(random_password) 
             db.session.add(emp)
             employees.append(emp)
             

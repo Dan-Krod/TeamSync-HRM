@@ -5,6 +5,7 @@ from app.models.models import LeaveRequest
 from app.schemas.schemas import LeaveRequestSchema
 from app.services.leave_state import LeaveRequestManager
 from app import db
+from datetime import datetime
 
 leave_bp = Blueprint('leave_bp', __name__, url_prefix='/api/leaves')
 leave_schema = LeaveRequestSchema()
@@ -15,16 +16,25 @@ leaves_schema = LeaveRequestSchema(many=True)
 def create_leave():
     current_user = json.loads(get_jwt_identity())
     data = request.get_json()
-    new_leave = LeaveRequest(
-        employee_id=current_user['id'],
-        type=data.get('type', 'annual'),
-        start_date=data['start_date'],
-        end_date=data['end_date'],
-        status='pending'
-    )
-    db.session.add(new_leave)
-    db.session.commit()
-    return jsonify(leave_schema.dump(new_leave)), 201
+    
+    try:
+        start = datetime.strptime(data['start_date'], '%Y-%m-%d').date()
+        end = datetime.strptime(data['end_date'], '%Y-%m-%d').date()
+        
+        new_leave = LeaveRequest(
+            employee_id=current_user['id'],
+            type=data.get('type', 'annual'),
+            start_date=start,
+            end_date=end,
+            status='pending',
+            reason=data.get('reason', 'Заявка з кабінету')
+        )
+        db.session.add(new_leave)
+        db.session.commit()
+        return jsonify({"msg": "Заявку успішно подано"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Помилка створення заявки: {str(e)}"}), 400
 
 @leave_bp.route('/', methods=['GET'])
 @jwt_required()

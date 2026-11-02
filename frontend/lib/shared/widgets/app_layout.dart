@@ -17,20 +17,6 @@ class AppLayout extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                // Простий AppBar для веб-версії
-                Container(
-                  height: 64,
-                  color: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      const SizedBox(width: 16),
-                    ],
-                  ),
-                ),
-                const Divider(height: 1, thickness: 1),
-                // Основний контент сторінки
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.all(24.0),
