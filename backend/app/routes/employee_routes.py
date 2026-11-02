@@ -1,8 +1,10 @@
+from datetime import datetime
 from flask import Blueprint, request, jsonify
 from app.models.models import Employee
 from app.schemas.schemas import employee_schema, employees_schema
 from app import db
 from app.services.onboarding_facade import OnboardingFacade
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 employee_bp = Blueprint('employee_bp', __name__, url_prefix='/api/employees')
 
@@ -39,46 +41,31 @@ def get_employee(id):
     return jsonify(employee_schema.dump(employee)), 200
 
 @employee_bp.route('/', methods=['POST'])
+@jwt_required()
 def create_employee():
-    """
-    Створити нового співробітника (Онбординг)
-    ---
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          id: EmployeeInput
-          type: object
-          properties:
-            first_name:
-              type: string
-            last_name:
-              type: string
-            email:
-              type: string
-            position:
-              type: string
-            salary:
-              type: number
-            hire_date:
-              type: string
-              format: date
-            role:
-              type: string
-            department_id:
-              type: integer
-    responses:
-      201:
-        description: Співробітника успішно створено (відпрацював Facade та Factory Method)
-      400:
-        description: Помилка валідації або збереження в БД
-    """
     data = request.get_json()
+    
     try:
-        new_employee = OnboardingFacade.onboard_new_employee(data)
-        return jsonify(employee_schema.dump(new_employee)), 201
+        new_emp = Employee(
+            first_name=data.get('first_name'),
+            last_name=data.get('last_name'),
+            email=data.get('email'),
+            position=data.get('position'),
+            salary=data.get('salary', 0.0),
+            department_id=data.get('department_id', 1),
+            # Додаємо автоматичне заповнення обов'язкових полів:
+            hire_date=datetime.today().date(),
+            role='user',
+            phone=data.get('phone', '+380000000000') 
+        )
+        # Встановлюємо дефолтний пароль
+        new_emp.set_password('password123')
+        
+        db.session.add(new_emp)
+        db.session.commit()
+        return jsonify({"msg": "Співробітника створено"}), 201
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 400
       
 @employee_bp.route('/<int:id>', methods=['PUT'])

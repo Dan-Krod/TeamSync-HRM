@@ -17,7 +17,8 @@ def login():
         return jsonify({
             'token': access_token, 
             'role': emp.role, 
-            'name': f"{emp.first_name} {emp.last_name}"
+            'name': f"{emp.first_name} {emp.last_name}",
+            "salary": emp.salary
         }), 200
 
     return jsonify({'error': 'Невірний email або пароль'}), 401

@@ -25,9 +25,7 @@ class AppLayout extends StatelessWidget {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      IconButton(icon: const Icon(Icons.notifications_outlined), onPressed: () {}),
                       const SizedBox(width: 16),
-                      const CircleAvatar(child: Icon(Icons.person)),
                     ],
                   ),
                 ),

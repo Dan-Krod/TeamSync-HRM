@@ -20,7 +20,32 @@ class StaffFlowApp extends StatelessWidget {
       child: MaterialApp.router(
         title: 'StaffFlow HRM',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: const Color(0xFF2563EB), // Сучасний синій колір
+            background: const Color(0xFFF8FAFC), // Світло-сірий фон замість білого
+          ),
+          cardTheme: CardThemeData(
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.grey.shade200),
+            ),
+            margin: const EdgeInsets.all(16),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              elevation: 0,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          ),
+          dataTableTheme: DataTableThemeData(
+            headingRowColor: MaterialStateProperty.all(Colors.grey.shade50),
+            dataRowColor: MaterialStateProperty.all(Colors.white),
+          ),
+        ),
         routerConfig: appRouter,
       ),
     );

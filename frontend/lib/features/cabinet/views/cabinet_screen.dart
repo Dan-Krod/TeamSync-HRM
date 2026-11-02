@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_bloc/flutter_bloc.dart'; 
+import '../../auth/cubit/auth_cubit.dart'; 
+import '../../auth/cubit/auth_state.dart';
+import '../../../core/api/api_client.dart';
 import '../../../core/api/api_client.dart';
 
 class CabinetScreen extends StatefulWidget {
@@ -11,6 +15,7 @@ class CabinetScreen extends StatefulWidget {
 
 class _CabinetScreenState extends State<CabinetScreen> {
   String userName = 'Співробітник';
+  double salary = 0.0;
   bool isWorking = false;
   bool isLoading = false;
 
@@ -30,6 +35,7 @@ class _CabinetScreenState extends State<CabinetScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       userName = prefs.getString('name') ?? 'Співробітник';
+      salary = prefs.getDouble('salary') ?? 0.0;
     });
   }
 
@@ -70,7 +76,13 @@ class _CabinetScreenState extends State<CabinetScreen> {
         endDate = null;
       });
     } catch (e) {
-      _showSnackBar(e.toString().replaceAll('Exception: ', ''), Colors.red);
+      final errorMsg = e.toString().replaceAll('Exception: ', '');
+      _showSnackBar(errorMsg, Colors.red);
+      
+      // Автоматично виправляємо розсинхрон UI, якщо зміна вже триває
+      if (errorMsg.contains('вже розпочато')) {
+        setState(() => isWorking = true);
+      }
     } finally {
       setState(() => isSubmittingLeave = false);
     }
@@ -164,22 +176,22 @@ class _CabinetScreenState extends State<CabinetScreen> {
   }
 
   Widget _buildSalaryCard() {
-    return const Card(
+    return Card(
       child: Padding(
-        padding: EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Зарплата',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            SizedBox(height: 24),
-            Text('Поточний оклад:', style: TextStyle(color: Colors.grey)),
-            SizedBox(height: 8),
+            const SizedBox(height: 24),
+            const Text('Поточний оклад:', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 8),
             Text(
-              '₴ 45,000.00',
-              style: TextStyle(
+              '₴ ${salary.toStringAsFixed(2)}', // Використовуємо локальну змінну
+              style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Colors.blue,

@@ -3,51 +3,49 @@ from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from app import db
-from app.models.models import TimeRecord, Employee
+from app.models.models import AttendanceRecord, Employee
 
 time_bp = Blueprint('time_bp', __name__, url_prefix='/api/time')
 
 @time_bp.route('/clock-in', methods=['POST'])
 @jwt_required()
 def clock_in():
-    current_user = get_jwt_identity()
+    current_user = json.loads(get_jwt_identity())
     emp_id = current_user['id']
     
-    # Перевіряємо, чи немає вже відкритої зміни сьогодні
-    existing_record = TimeRecord.query.filter_by(
-        employee_id=emp_id, 
-        date=datetime.utcnow().date(),
-        clock_out=None
-    ).first()
+    today = datetime.today().date()
+    existing = AttendanceRecord.query.filter_by(employee_id=emp_id, record_date=today).first()
     
-    if existing_record:
-        return jsonify({'error': 'Зміна вже розпочата'}), 400
+    if existing and existing.clock_in:
+        return jsonify({"error": "Зміну вже розпочато сьогодні"}), 400
         
-    new_record = TimeRecord(employee_id=emp_id)
-    db.session.add(new_record)
+    if not existing:
+        new_record = AttendanceRecord(employee_id=emp_id, record_date=today, clock_in=datetime.now())
+        db.session.add(new_record)
+    else:
+        existing.clock_in = datetime.now()
+        
     db.session.commit()
-    
-    return jsonify({'message': 'Зміну успішно розпочато', 'clock_in': new_record.clock_in}), 200
+    return jsonify({"msg": "Зміну розпочато успішно"}), 201
 
 @time_bp.route('/clock-out', methods=['PUT'])
 @jwt_required()
 def clock_out():
-    current_user = get_jwt_identity()
+    current_user = json.loads(get_jwt_identity())
     emp_id = current_user['id']
     
-    # Шукаємо відкриту зміну
-    record = TimeRecord.query.filter_by(
-        employee_id=emp_id, 
-        clock_out=None
-    ).first()
+    today = datetime.today().date()
+    existing = AttendanceRecord.query.filter_by(employee_id=emp_id, record_date=today).first()
     
-    if not record:
-        return jsonify({'error': 'Немає активної зміни для завершення'}), 404
+    if not existing or not existing.clock_in:
+        return jsonify({"error": "Спочатку потрібно почати зміну"}), 400
         
-    record.clock_out = datetime.utcnow()
+    if existing.clock_out:
+        return jsonify({"error": "Зміну вже завершено"}), 400
+        
+    existing.clock_out = datetime.now()
     db.session.commit()
-    
-    return jsonify({'message': 'Зміну успішно завершено', 'clock_out': record.clock_out}), 200
+    return jsonify({"msg": "Зміну завершено успішно"}), 200
 
 @time_bp.route('/', methods=['GET'])
 @jwt_required()
@@ -58,7 +56,7 @@ def get_attendance():
     if current_user['role'] not in ['hr', 'admin']:
         return jsonify({"error": "Немає прав доступу"}), 403
         
-    records = TimeRecord.query.all()
+    records = AttendanceRecord.query.all()
     result = []
     
     for r in records:

@@ -6,7 +6,7 @@ from faker import Faker
 import random
 from datetime import timedelta, datetime
 
-fake = Faker('uk_UA')
+fake = Faker('en_US')
 app = create_app()
 
 def seed():
@@ -15,7 +15,7 @@ def seed():
         db.create_all()
 
         departments = []
-        dept_names = ['IT', 'HR', 'Фінанси', 'Маркетинг', 'Продажі']
+        dept_names = ['IT', 'HR', 'Finance', 'Marketing', 'Sales']
         for name in dept_names:
             dept = Department(name=name, description=fake.catch_phrase())
             db.session.add(dept)
@@ -24,11 +24,11 @@ def seed():
 
         employees = []
         admin_emp = Employee(
-            first_name="Головний",
-            last_name="Адмін",
+            first_name="Main",
+            last_name="Admin",
             email="admin@staff.com", 
-            phone="+380990000000",
-            position="Директор",
+            phone="+1234567890",
+            position="Director",
             salary=100000.00,
             hire_date=fake.date_between(start_date='-5y', end_date='today'),
             role='admin',            
@@ -122,7 +122,7 @@ def seed():
             db.session.add(candidate)
 
         db.session.commit()
-        print("Базу даних успішно наповнено! Заповнено всі 8 таблиць.")
+        print("Database successfully seeded with English data!")
 
 if __name__ == '__main__':
     seed()
