@@ -12,14 +12,16 @@ class DashboardCubit extends Cubit<DashboardState> {
         ApiClient.get('/employees/'),
         ApiClient.get('/candidates/'),
       ]);
-      
+
       final employeesCount = (results[0] as List).length;
       final candidatesCount = (results[1] as List).length;
-      
-      emit(DashboardLoaded(
-        totalEmployees: employeesCount,
-        totalCandidates: candidatesCount,
-      ));
+
+      emit(
+        DashboardLoaded(
+          totalEmployees: employeesCount,
+          totalCandidates: candidatesCount,
+        ),
+      );
     } catch (e) {
       emit(DashboardError('Помилка: ${e.toString()}'));
     }

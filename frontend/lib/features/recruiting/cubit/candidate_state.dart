@@ -7,13 +7,16 @@ abstract class RecruitingState extends Equatable {
 }
 
 class RecruitingInitial extends RecruitingState {}
+
 class RecruitingLoading extends RecruitingState {}
+
 class RecruitingLoaded extends RecruitingState {
   final List<Candidate> candidates;
   RecruitingLoaded(this.candidates);
   @override
   List<Object> get props => [candidates];
 }
+
 class RecruitingError extends RecruitingState {
   final String message;
   RecruitingError(this.message);

@@ -10,7 +10,9 @@ class LeaveCubit extends Cubit<LeaveState> {
     emit(LeaveLoading());
     try {
       final response = await ApiClient.get('/leaves/');
-      final List<LeaveRequest> requests = (response as List).map((e) => LeaveRequest.fromJson(e)).toList();
+      final List<LeaveRequest> requests = (response as List)
+          .map((e) => LeaveRequest.fromJson(e))
+          .toList();
       emit(LeaveLoaded(requests));
     } catch (e) {
       emit(LeaveError('Помилка завантаження: $e'));

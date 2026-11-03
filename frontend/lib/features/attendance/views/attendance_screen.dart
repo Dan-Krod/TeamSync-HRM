@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/attendance_cubit.dart';
-//import '../cubit/attendance_state.dart';
 
 class AttendanceScreen extends StatelessWidget {
   const AttendanceScreen({super.key});
@@ -65,7 +64,7 @@ class _AttendanceViewState extends State<_AttendanceView> {
               color: textColor,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
-              fontFamily: 'Courier', 
+              fontFamily: 'Courier',
             ),
           ),
         ],

@@ -5,12 +5,12 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
-      scaffoldBackgroundColor: const Color(0xFFF5F5F5), 
+      scaffoldBackgroundColor: const Color(0xFFF5F5F5),
       colorScheme: const ColorScheme.light(
-        primary: Colors.black,       
+        primary: Colors.black,
         secondary: Colors.grey,
-        surface: Colors.white,       
-        onPrimary: Colors.white,     
+        surface: Colors.white,
+        onPrimary: Colors.white,
         onSurface: Colors.black87,
       ),
       textTheme: GoogleFonts.interTextTheme(),

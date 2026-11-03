@@ -27,10 +27,7 @@ final GoRouter appRouter = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
@@ -39,31 +36,38 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          pageBuilder: (context, state) => const NoTransitionPage(child: DashboardScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: DashboardScreen()),
         ),
         GoRoute(
           path: '/cabinet',
-          pageBuilder: (context, state) => const NoTransitionPage(child: CabinetScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: CabinetScreen()),
         ),
         GoRoute(
           path: '/employees',
-          pageBuilder: (context, state) => const NoTransitionPage(child: EmployeesScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: EmployeesScreen()),
         ),
         GoRoute(
           path: '/recruiting',
-          pageBuilder: (context, state) => const NoTransitionPage(child: RecruitingScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: RecruitingScreen()),
         ),
         GoRoute(
           path: '/reports',
-          pageBuilder: (context, state) => const NoTransitionPage(child: ReportsScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: ReportsScreen()),
         ),
         GoRoute(
           path: '/leaves',
-          pageBuilder: (context, state) => const NoTransitionPage(child: LeavesScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: LeavesScreen()),
         ),
         GoRoute(
           path: '/attendance',
-          pageBuilder: (context, state) => const NoTransitionPage(child: AttendanceScreen()),
+          pageBuilder: (context, state) =>
+              const NoTransitionPage(child: AttendanceScreen()),
         ),
       ],
     ),

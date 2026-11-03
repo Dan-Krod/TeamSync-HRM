@@ -6,16 +6,22 @@ abstract class DashboardState extends Equatable {
 }
 
 class DashboardInitial extends DashboardState {}
+
 class DashboardLoading extends DashboardState {}
+
 class DashboardLoaded extends DashboardState {
   final int totalEmployees;
   final int totalCandidates;
 
-  DashboardLoaded({required this.totalEmployees, required this.totalCandidates});
+  DashboardLoaded({
+    required this.totalEmployees,
+    required this.totalCandidates,
+  });
 
   @override
   List<Object> get props => [totalEmployees, totalCandidates];
 }
+
 class DashboardError extends DashboardState {
   final String message;
   DashboardError(this.message);

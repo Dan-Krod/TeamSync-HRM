@@ -25,7 +25,6 @@ class _LeavesView extends StatefulWidget {
 class _LeavesViewState extends State<_LeavesView> {
   String _searchQuery = '';
 
-  // Хелпер для назв відпусток
   String _getLeaveTypeName(String type) {
     switch (type.toLowerCase()) {
       case 'annual':
@@ -41,7 +40,6 @@ class _LeavesViewState extends State<_LeavesView> {
     }
   }
 
-  // Хелпер для стилізації бейджів статусу
   Widget _buildStatusBadge(String status) {
     Color bgColor;
     Color textColor;
@@ -159,7 +157,6 @@ class _LeavesViewState extends State<_LeavesView> {
                         ),
                         const Divider(height: 1),
 
-                        // Таблиця
                         Expanded(
                           child: SingleChildScrollView(
                             child: SizedBox(

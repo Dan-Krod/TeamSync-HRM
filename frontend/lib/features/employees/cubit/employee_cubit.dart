@@ -10,7 +10,9 @@ class EmployeeCubit extends Cubit<EmployeeState> {
     emit(EmployeeLoading());
     try {
       final response = await ApiClient.get('/employees/');
-      final List<Employee> employees = (response as List).map((e) => Employee.fromJson(e)).toList();
+      final List<Employee> employees = (response as List)
+          .map((e) => Employee.fromJson(e))
+          .toList();
       emit(EmployeeLoaded(employees));
     } catch (e) {
       emit(EmployeeError('Помилка завантаження: ${e.toString()}'));

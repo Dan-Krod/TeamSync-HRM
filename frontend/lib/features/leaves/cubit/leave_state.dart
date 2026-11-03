@@ -7,13 +7,16 @@ abstract class LeaveState extends Equatable {
 }
 
 class LeaveInitial extends LeaveState {}
+
 class LeaveLoading extends LeaveState {}
+
 class LeaveLoaded extends LeaveState {
   final List<LeaveRequest> requests;
   LeaveLoaded(this.requests);
   @override
   List<Object> get props => [requests];
 }
+
 class LeaveError extends LeaveState {
   final String message;
   LeaveError(this.message);

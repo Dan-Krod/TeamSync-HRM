@@ -3,7 +3,7 @@ import '../models/report_models.dart';
 
 abstract class ReportState extends Equatable {
   const ReportState();
-  
+
   @override
   List<Object> get props => [];
 }
@@ -16,7 +16,10 @@ class ReportLoaded extends ReportState {
   final List<DepartmentReport> departments;
   final Map<String, dynamic> leavesAnalytics;
 
-  const ReportLoaded({required this.departments, required this.leavesAnalytics});
+  const ReportLoaded({
+    required this.departments,
+    required this.leavesAnalytics,
+  });
 
   @override
   List<Object> get props => [departments, leavesAnalytics];

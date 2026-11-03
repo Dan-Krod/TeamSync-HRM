@@ -326,7 +326,10 @@ class _CabinetScreenState extends State<CabinetScreen> {
                       value: 'unpaid',
                       child: Text('За свій рахунок'),
                     ),
-                    DropdownMenuItem(value: 'business_trip', child: Text('Відрядження')),
+                    DropdownMenuItem(
+                      value: 'business_trip',
+                      child: Text('Відрядження'),
+                    ),
                   ],
                   onChanged: (val) => setState(() => leaveType = val!),
                 ),

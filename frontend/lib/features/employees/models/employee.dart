@@ -14,7 +14,7 @@ class Employee {
     required this.lastName,
     required this.email,
     required this.position,
-    required this.salary, 
+    required this.salary,
     required this.phone,
     required this.departmentId,
   });

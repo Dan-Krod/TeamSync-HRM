@@ -12,7 +12,7 @@ class AuthCubit extends Cubit<AuthState> {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
     final role = prefs.getString('role');
-    
+
     if (token != null && role != null) {
       emit(AuthAuthenticated(role));
     } else {
@@ -27,12 +27,12 @@ class AuthCubit extends Cubit<AuthState> {
         'email': email,
         'password': password,
       });
-      
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('token', response['token']);
       await prefs.setString('role', response['role']);
       await prefs.setString('name', response['name']);
-      
+
       emit(AuthAuthenticated(response['role']));
     } catch (e) {
       emit(AuthError('Помилка входу: перевірте email та пароль'));

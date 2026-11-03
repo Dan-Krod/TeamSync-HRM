@@ -9,7 +9,7 @@ class ApiClient {
   static Future _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');
-    
+
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -25,7 +25,10 @@ class ApiClient {
     return _processResponse(response);
   }
 
-  static Future<dynamic> post(String endpoint, Map<String, dynamic> body) async {
+  static Future<dynamic> post(
+    String endpoint,
+    Map<String, dynamic> body,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl$endpoint'),
       headers: await _getHeaders(),
@@ -60,7 +63,9 @@ class ApiClient {
       throw Exception('Сесія закінчилась. Увійдіть знову.');
     } else {
       final errorBody = jsonDecode(response.body);
-      throw Exception(errorBody['error'] ?? 'Помилка сервера: ${response.statusCode}');
+      throw Exception(
+        errorBody['error'] ?? 'Помилка сервера: ${response.statusCode}',
+      );
     }
   }
 
@@ -72,9 +77,6 @@ class ApiClient {
 
   static Future<http.Response> getFile(String endpoint) async {
     final headers = await _getHeaders();
-    return await http.get(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: headers,
-    );
+    return await http.get(Uri.parse('$baseUrl$endpoint'), headers: headers);
   }
 }

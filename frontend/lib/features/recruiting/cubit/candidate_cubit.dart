@@ -10,7 +10,9 @@ class RecruitingCubit extends Cubit<RecruitingState> {
     emit(RecruitingLoading());
     try {
       final response = await ApiClient.get('/candidates/');
-      final List<Candidate> candidates = (response as List).map((e) => Candidate.fromJson(e)).toList();
+      final List<Candidate> candidates = (response as List)
+          .map((e) => Candidate.fromJson(e))
+          .toList();
       emit(RecruitingLoaded(candidates));
     } catch (e) {
       emit(RecruitingError('Помилка завантаження: $e'));
