@@ -35,21 +35,22 @@ class _EmployeesViewState extends State<_EmployeesView> {
     ).showSnackBar(SnackBar(content: Text(message), backgroundColor: color));
   }
 
-  Future<void> _downloadContract(int empId) async {
-    _showSnackBar('Генерація контракту...', Colors.blue);
+  Future<void> _downloadDocument(int empId, String type) async {
+    final typeTitle = type == 'order' ? 'наказу' : 'контракту';
+    _showSnackBar('Генерація $typeTitle...', Colors.blue);
     try {
       final response = await ApiClient.getFile(
-        '/documents/generate/$empId?type=contract',
+        '/documents/generate/$empId?type=$type',
       );
 
       if (response.statusCode == 200) {
         final blob = html.Blob([response.bodyBytes], 'application/pdf');
         final url = html.Url.createObjectUrlFromBlob(blob);
         html.AnchorElement(href: url)
-          ..setAttribute('download', 'contract_$empId.pdf')
+          ..setAttribute('download', '${type}_$empId.pdf')
           ..click();
         html.Url.revokeObjectUrl(url);
-        _showSnackBar('Контракт завантажено', Colors.green);
+        _showSnackBar('Документ завантажено', Colors.green);
       } else {
         _showSnackBar(
           'Помилка ${response.statusCode}: перезайдіть у систему',
@@ -70,91 +71,135 @@ class _EmployeesViewState extends State<_EmployeesView> {
       text: employee?.lastName ?? '',
     );
     final emailController = TextEditingController(text: employee?.email ?? '');
+    final phoneController = TextEditingController(text: employee?.phone ?? '');
     final positionController = TextEditingController(
       text: employee?.position ?? '',
     );
     final salaryController = TextEditingController(
-      text: employee?.salary.toString() ?? '',
+      text: employee?.salary != null ? employee!.salary.toString() : '',
     );
+
+    int selectedDepartmentId = employee?.departmentId ?? 1;
 
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        title: Text(
-          isEditing ? 'Редагувати співробітника' : 'Новий співробітник',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: firstNameController,
-                  decoration: const InputDecoration(labelText: 'Ім\'я'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: lastNameController,
-                  decoration: const InputDecoration(labelText: 'Прізвище'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: positionController,
-                  decoration: const InputDecoration(labelText: 'Посада'),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: salaryController,
-                  decoration: const InputDecoration(
-                    labelText: 'Зарплата (грн)',
-                  ),
-                  keyboardType: TextInputType.number,
-                ),
-              ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'Скасувати',
-              style: TextStyle(color: Colors.grey),
+            title: Text(
+              isEditing ? 'Редагувати співробітника' : 'Новий співробітник',
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
+            content: SizedBox(
+              width: 400,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: firstNameController,
+                      decoration: const InputDecoration(labelText: 'Ім\'я'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: lastNameController,
+                      decoration: const InputDecoration(labelText: 'Прізвище'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: emailController,
+                      decoration: const InputDecoration(labelText: 'Email'),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: phoneController,
+                      decoration: const InputDecoration(labelText: 'Телефон'),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: positionController,
+                      decoration: const InputDecoration(labelText: 'Посада'),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<int>(
+                      value: selectedDepartmentId,
+                      decoration: const InputDecoration(labelText: 'Відділ'),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 1,
+                          child: Text('Management (Керівництво)'),
+                        ),
+                        DropdownMenuItem(value: 2, child: Text('HR (Кадри)')),
+                        DropdownMenuItem(
+                          value: 3,
+                          child: Text('IT (Розробка)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 4,
+                          child: Text('Finance (Бухгалтерія)'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null)
+                          setStateDialog(() => selectedDepartmentId = val);
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: salaryController,
+                      decoration: const InputDecoration(
+                        labelText: 'Зарплата (грн)',
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            onPressed: () {
-              final data = {
-                'first_name': firstNameController.text,
-                'last_name': lastNameController.text,
-                'email': emailController.text,
-                'position': positionController.text,
-                'salary': double.tryParse(salaryController.text) ?? 0.0,
-                'department_id': 1,
-              };
-              if (isEditing) {
-                context.read<EmployeeCubit>().updateEmployee(employee.id, data);
-              } else {
-                context.read<EmployeeCubit>().addEmployee(data);
-              }
-              Navigator.pop(ctx);
-            },
-            child: const Text('Зберегти'),
-          ),
-        ],
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Скасувати',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () {
+                  final data = {
+                    'first_name': firstNameController.text,
+                    'last_name': lastNameController.text,
+                    'email': emailController.text,
+                    'phone': phoneController.text,
+                    'position': positionController.text,
+                    'salary': double.tryParse(salaryController.text) ?? 0.0,
+                    'department_id': selectedDepartmentId,
+                  };
+
+                  if (isEditing) {
+                    context.read<EmployeeCubit>().updateEmployee(
+                      employee.id,
+                      data,
+                    );
+                  } else {
+                    context.read<EmployeeCubit>().addEmployee(data);
+                  }
+                  Navigator.pop(ctx);
+                },
+                child: const Text('Зберегти'),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -223,7 +268,6 @@ class _EmployeesViewState extends State<_EmployeesView> {
                     ),
                     child: Column(
                       children: [
-                        // Пошук
                         Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: TextField(
@@ -249,14 +293,12 @@ class _EmployeesViewState extends State<_EmployeesView> {
                         ),
                         const Divider(height: 1),
 
-                        // Таблиця
                         Expanded(
                           child: SingleChildScrollView(
                             child: SizedBox(
                               width: double.infinity,
                               child: DataTable(
-                                dataRowMaxHeight:
-                                    72, 
+                                dataRowMaxHeight: 72,
                                 dataRowMinHeight: 72,
                                 headingTextStyle: const TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -268,8 +310,14 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                   DataColumn(label: Text('Дії')),
                                 ],
                                 rows: filteredEmployees.map((emp) {
-                                  final initials =
-                                      '${emp.firstName[0]}${emp.lastName[0]}';
+                                  final fLetter = emp.firstName.isNotEmpty
+                                      ? emp.firstName[0]
+                                      : '';
+                                  final lLetter = emp.lastName.isNotEmpty
+                                      ? emp.lastName[0]
+                                      : '';
+                                  final initials = '$fLetter$lLetter';
+
                                   return DataRow(
                                     cells: [
                                       DataCell(
@@ -281,7 +329,9 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                               foregroundColor: Colors.black87,
                                               radius: 20,
                                               child: Text(
-                                                initials,
+                                                initials.isEmpty
+                                                    ? '?'
+                                                    : initials,
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.bold,
                                                   fontSize: 14,
@@ -336,16 +386,28 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                             ),
                                           ),
                                           onSelected: (value) {
-                                            if (value == 'contract')
-                                              _downloadContract(emp.id);
-                                            if (value == 'edit')
+                                            if (value == 'contract') {
+                                              _downloadDocument(
+                                                emp.id,
+                                                'contract',
+                                              );
+                                            }
+                                            if (value == 'order') {
+                                              _downloadDocument(
+                                                emp.id,
+                                                'order',
+                                              );
+                                            }
+                                            if (value == 'edit') {
                                               _showEmployeeDialog(
                                                 employee: emp,
                                               );
-                                            if (value == 'delete')
+                                            }
+                                            if (value == 'delete') {
                                               context
                                                   .read<EmployeeCubit>()
                                                   .deleteEmployee(emp.id);
+                                            }
                                           },
                                           itemBuilder: (context) => [
                                             const PopupMenuItem(
@@ -359,6 +421,20 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                                   ),
                                                   SizedBox(width: 12),
                                                   Text('Контракт'),
+                                                ],
+                                              ),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'order',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons
+                                                        .assignment_ind_outlined,
+                                                    size: 20,
+                                                  ),
+                                                  SizedBox(width: 12),
+                                                  Text('Наказ про призначення'),
                                                 ],
                                               ),
                                             ),

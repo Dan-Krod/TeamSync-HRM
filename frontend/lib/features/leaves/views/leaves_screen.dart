@@ -34,6 +34,8 @@ class _LeavesViewState extends State<_LeavesView> {
         return 'Лікарняний';
       case 'unpaid':
         return 'За свій рахунок';
+      case 'business_trip': 
+        return 'Відрядження';
       default:
         return type.toUpperCase();
     }

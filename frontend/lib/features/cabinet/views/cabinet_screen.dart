@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../auth/cubit/auth_cubit.dart';
-import '../../auth/cubit/auth_state.dart';
 import '../../../core/api/api_client.dart';
 
 class CabinetScreen extends StatefulWidget {
@@ -113,7 +109,7 @@ class _CabinetScreenState extends State<CabinetScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Colors.black, 
+              primary: Colors.black,
               onPrimary: Colors.white,
               onSurface: Colors.black,
             ),
@@ -330,6 +326,7 @@ class _CabinetScreenState extends State<CabinetScreen> {
                       value: 'unpaid',
                       child: Text('За свій рахунок'),
                     ),
+                    DropdownMenuItem(value: 'business_trip', child: Text('Відрядження')),
                   ],
                   onChanged: (val) => setState(() => leaveType = val!),
                 ),
