@@ -55,7 +55,7 @@ def seed():
                 role=random.choices(roles, weights=role_weights, k=1)[0],
                 department_id=random.choice(departments).id
             )
-            emp.set_password(random_password) 
+            emp.set_password("password123") 
             db.session.add(emp)
             employees.append(emp)
             

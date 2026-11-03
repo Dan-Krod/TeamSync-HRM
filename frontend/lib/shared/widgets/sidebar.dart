@@ -21,35 +21,105 @@ class Sidebar extends StatelessWidget {
         final bool isAdminOrHR = role == 'admin' || role == 'hr';
 
         return Container(
-          width: 250,
+          width: 260,
           color: Colors.white,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Padding(
-                padding: EdgeInsets.all(24.0),
+                padding: EdgeInsets.fromLTRB(24, 32, 24, 24),
                 child: Text(
-                  'StaffFlow HRM',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Color(0xFF1976D2)),
+                  'StaffFlow.',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                    letterSpacing: -0.5,
+                  ),
                 ),
               ),
-              if (isAdminOrHR) _NavItem(title: 'Дашборд', icon: Icons.dashboard, route: '/', currentRoute: currentRoute),
-              if (!isAdminOrHR) _NavItem(title: 'Мій кабінет', icon: Icons.person, route: '/cabinet', currentRoute: currentRoute),
-              if (isAdminOrHR) _NavItem(title: 'Співробітники', icon: Icons.people, route: '/employees', currentRoute: currentRoute),
-              if (isAdminOrHR) _NavItem(title: 'Рекрутинг', icon: Icons.work, route: '/recruiting', currentRoute: currentRoute),
-              if (isAdminOrHR) _NavItem(title: 'Звіти', icon: Icons.bar_chart, route: '/reports', currentRoute: currentRoute),
-              if (isAdminOrHR) _NavItem(title: 'Відпустки', icon: Icons.beach_access, route: '/leaves', currentRoute: currentRoute),
-              if (isAdminOrHR) _NavItem(title: 'Облік часу', icon: Icons.timer, route: '/attendance', currentRoute: currentRoute),
+              const SizedBox(height: 8),
+              if (isAdminOrHR)
+                _NavItem(
+                  title: 'Дашборд',
+                  icon: Icons.space_dashboard_rounded,
+                  route: '/',
+                  currentRoute: currentRoute,
+                ),
+              if (!isAdminOrHR)
+                _NavItem(
+                  title: 'Мій кабінет',
+                  icon: Icons.person_outline_rounded,
+                  route: '/cabinet',
+                  currentRoute: currentRoute,
+                ),
+              if (isAdminOrHR)
+                _NavItem(
+                  title: 'Співробітники',
+                  icon: Icons.people_alt_outlined,
+                  route: '/employees',
+                  currentRoute: currentRoute,
+                ),
+              if (isAdminOrHR)
+                _NavItem(
+                  title: 'Рекрутинг',
+                  icon: Icons.work_outline_rounded,
+                  route: '/recruiting',
+                  currentRoute: currentRoute,
+                ),
+              if (isAdminOrHR)
+                _NavItem(
+                  title: 'Звіти',
+                  icon: Icons.insert_chart_outlined_rounded,
+                  route: '/reports',
+                  currentRoute: currentRoute,
+                ),
+              if (isAdminOrHR)
+                _NavItem(
+                  title: 'Відпустки',
+                  icon: Icons.event_note_rounded,
+                  route: '/leaves',
+                  currentRoute: currentRoute,
+                ),
+              if (isAdminOrHR)
+                _NavItem(
+                  title: 'Облік часу',
+                  icon: Icons.access_time_rounded,
+                  route: '/attendance',
+                  currentRoute: currentRoute,
+                ),
+
               const Spacer(),
-              const Divider(height: 1),
-              ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Вийти', style: TextStyle(color: Colors.red)),
-                onTap: () {
-                  context.read<AuthCubit>().logout();
-                  context.go('/login');
-                },
+              const Divider(height: 1, color: Color(0xFFEEEEEE)),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 12.0,
+                ),
+                child: ListTile(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  leading: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.redAccent,
+                    size: 22,
+                  ),
+                  title: const Text(
+                    'Вийти',
+                    style: TextStyle(
+                      color: Colors.redAccent,
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14,
+                    ),
+                  ),
+                  hoverColor: Colors.red.shade50,
+                  onTap: () {
+                    context.read<AuthCubit>().logout();
+                    context.go('/login');
+                  },
+                ),
               ),
-              const SizedBox(height: 16),
             ],
           ),
         );
@@ -64,19 +134,37 @@ class _NavItem extends StatelessWidget {
   final String route;
   final String currentRoute;
 
-  const _NavItem({required this.title, required this.icon, required this.route, required this.currentRoute});
+  const _NavItem({
+    required this.title,
+    required this.icon,
+    required this.route,
+    required this.currentRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
     final bool isActive = currentRoute == route;
-    final color = isActive ? Theme.of(context).colorScheme.primary : Colors.grey.shade700;
+    final Color contentColor = isActive ? Colors.black : Colors.grey.shade600;
+    final Color bgColor = isActive ? Colors.grey.shade100 : Colors.transparent;
 
-    return ListTile(
-      leading: Icon(icon, color: color),
-      title: Text(title, style: TextStyle(color: color, fontWeight: isActive ? FontWeight.bold : FontWeight.normal)),
-      selected: isActive,
-      selectedTileColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-      onTap: () => context.go(route),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        leading: Icon(icon, color: contentColor, size: 22),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: contentColor,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+            fontSize: 14,
+          ),
+        ),
+        selected: isActive,
+        selectedTileColor: bgColor,
+        hoverColor: Colors.grey.shade50,
+        onTap: () => context.go(route),
+      ),
     );
   }
 }
