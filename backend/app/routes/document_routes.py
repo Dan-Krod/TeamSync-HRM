@@ -2,8 +2,9 @@ import io
 import json
 from flask import Blueprint, send_file, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models.models import Employee
+from app.models.models import Employee, Document  
 from app.services.document_factory import HRDocumentFactory
+from app import db 
 
 document_bp = Blueprint('document_bp', __name__, url_prefix='/api/documents')
 
@@ -22,6 +23,15 @@ def generate_document(emp_id):
         doc = HRDocumentFactory.create_document(doc_type, emp)
         pdf_bytes, filename = doc.generate_pdf()
         
+        virtual_path = f"/storage/documents/{emp.id}/{filename}"
+        new_doc_record = Document(
+            employee_id=emp.id,
+            doc_type=doc_type,
+            file_path=virtual_path
+        )
+        db.session.add(new_doc_record)
+        db.session.commit()
+        
         return send_file(
             io.BytesIO(pdf_bytes),
             download_name=filename,
@@ -29,4 +39,5 @@ def generate_document(emp_id):
             mimetype='application/pdf'
         )
     except Exception as e:
+        db.session.rollback()
         return jsonify({"error": str(e)}), 400

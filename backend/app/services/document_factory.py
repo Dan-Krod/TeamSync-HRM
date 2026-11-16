@@ -8,7 +8,6 @@ class BaseDocument:
 
     def _render_pdf(self, html_string):
         result = io.BytesIO()
-        # Створюємо PDF з HTML-рядка
         pdf = pisa.pisaDocument(io.StringIO(html_string), result)
         if pdf.err:
             raise Exception("Помилка генерації PDF")
