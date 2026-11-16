@@ -45,23 +45,14 @@ def get_employee(id):
 def create_employee():
     data = request.get_json()
     
+    data['hire_date'] = datetime.today().date()
+    data['role'] = 'user'
+    if 'phone' not in data or not data['phone']:
+        data['phone'] = '+380000000000'
+
     try:
-        new_emp = Employee(
-            first_name=data.get('first_name'),
-            last_name=data.get('last_name'),
-            email=data.get('email'),
-            position=data.get('position'),
-            salary=data.get('salary', 0.0),
-            department_id=data.get('department_id', 1),
-            # Додаємо автоматичне заповнення обов'язкових полів:
-            hire_date=datetime.today().date(),
-            role='user',
-            phone=data.get('phone', '+380000000000') 
-        )
-        # Встановлюємо дефолтний пароль
+        new_emp = OnboardingFacade.onboard_new_employee(data)
         new_emp.set_password('password123')
-        
-        db.session.add(new_emp)
         db.session.commit()
         return jsonify({"msg": "Співробітника створено"}), 201
     except Exception as e:
