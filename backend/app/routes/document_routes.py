@@ -2,9 +2,10 @@ import io
 import json
 from flask import Blueprint, send_file, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from app.models.models import Employee, Document  
+from app.models.models import Document
 from app.services.document_factory import HRDocumentFactory
-from app import db 
+from app.repositories.employee_repository import SQLEmployeeRepository
+from app.repositories.document_repository import SQLDocumentRepository
 
 document_bp = Blueprint('document_bp', __name__, url_prefix='/api/documents')
 
@@ -17,7 +18,12 @@ def generate_document(emp_id):
         return jsonify({"error": "Немає прав доступу"}), 403
 
     doc_type = request.args.get('type', 'contract')
-    emp = Employee.query.get_or_404(emp_id)
+    emp_repo = SQLEmployeeRepository()
+    doc_repo = SQLDocumentRepository()
+
+    emp = emp_repo.findById(emp_id)
+    if not emp:
+        return jsonify({"error": "Співробітника не знайдено"}), 404
 
     try:
         doc = HRDocumentFactory.create_document(doc_type, emp)
@@ -29,8 +35,7 @@ def generate_document(emp_id):
             doc_type=doc_type,
             file_path=virtual_path
         )
-        db.session.add(new_doc_record)
-        db.session.commit()
+        doc_repo.save(new_doc_record)
         
         return send_file(
             io.BytesIO(pdf_bytes),
@@ -39,5 +44,4 @@ def generate_document(emp_id):
             mimetype='application/pdf'
         )
     except Exception as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 400

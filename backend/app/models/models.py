@@ -34,10 +34,10 @@ class Employee(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-    leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True)
-    attendances = db.relationship('AttendanceRecord', backref='employee', lazy=True)
-    payrolls = db.relationship('Payroll', backref='employee', lazy=True)
-    documents = db.relationship('Document', backref='employee', lazy=True)
+    leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True, cascade="all, delete-orphan")
+    attendances = db.relationship('AttendanceRecord', backref='employee', lazy=True, cascade="all, delete-orphan")
+    payrolls = db.relationship('Payroll', backref='employee', lazy=True, cascade="all, delete-orphan")
+    documents = db.relationship('Document', backref='employee', lazy=True, cascade="all, delete-orphan")
 
 class LeaveRequest(db.Model):
     __tablename__ = 'leave_requests'

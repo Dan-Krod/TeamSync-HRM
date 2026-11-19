@@ -80,7 +80,7 @@ class _EmployeesViewState extends State<_EmployeesView> {
     );
 
     int selectedDepartmentId = employee?.departmentId ?? 1;
-
+    final employeeCubit = context.read<EmployeeCubit>();
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
@@ -186,12 +186,12 @@ class _EmployeesViewState extends State<_EmployeesView> {
                   };
 
                   if (isEditing) {
-                    context.read<EmployeeCubit>().updateEmployee(
+                    employeeCubit.updateEmployee(
                       employee.id,
                       data,
                     );
                   } else {
-                    context.read<EmployeeCubit>().addEmployee(data);
+                    employeeCubit.addEmployee(data);
                   }
                   Navigator.pop(ctx);
                 },
