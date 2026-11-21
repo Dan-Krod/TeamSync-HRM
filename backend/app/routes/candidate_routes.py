@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
 from app.models.models import Candidate
 from app.schemas.schemas import candidate_schema, candidates_schema
+from app.models.models import Vacancy
+from app.schemas.schemas import vacancy_schema, vacancies_schema
 from app import db
 
 candidate_bp = Blueprint('candidate_bp', __name__, url_prefix='/api/candidates')
@@ -71,3 +73,30 @@ def delete_candidate(id):
     db.session.delete(candidate)
     db.session.commit()
     return jsonify({"message": "Кандидата видалено"}), 200
+
+@candidate_bp.route('/vacancies', methods=['GET', 'POST'])
+def handle_vacancies():
+    if request.method == 'GET':
+        vacancies = Vacancy.query.all()
+        return jsonify(vacancies_schema.dump(vacancies)), 200
+    
+    data = request.get_json()
+    new_vacancy = Vacancy(
+        title=data['title'],
+        salary_range=data.get('salary_range', ''),
+        description=data.get('description', ''),
+        status=data.get('status', 'open'),
+        department_id=data.get('department_id')
+    )
+    db.session.add(new_vacancy)
+    db.session.commit()
+    return jsonify(vacancy_schema.dump(new_vacancy)), 201
+
+@candidate_bp.route('/vacancies/<int:id>', methods=['PUT'])
+def update_vacancy(id):
+    vacancy = Vacancy.query.get_or_404(id)
+    data = request.get_json()
+    if 'status' in data:
+        vacancy.status = data['status']
+    db.session.commit()
+    return jsonify(vacancy_schema.dump(vacancy)), 200

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/candidate_cubit.dart';
 import '../cubit/candidate_state.dart';
+import '../models/candidate.dart';
 
 class RecruitingScreen extends StatelessWidget {
   const RecruitingScreen({super.key});
@@ -24,10 +25,94 @@ class _RecruitingView extends StatefulWidget {
 
 class _RecruitingViewState extends State<_RecruitingView> {
   String _searchQuery = '';
+  int _selectedTab = 0;
 
-  void _showAddCandidateDialog(BuildContext ctx) {
+  void _showAddCandidateDialog(BuildContext ctx, List<Vacancy> vacancies) {
     final fullNameCtrl = TextEditingController();
     final resumeUrlCtrl = TextEditingController();
+    int? selectedVacancyId = vacancies.isNotEmpty ? vacancies.first.id : null;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text(
+            'Новий кандидат',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: fullNameCtrl,
+                  decoration: const InputDecoration(labelText: 'ПІБ'),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: resumeUrlCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Посилання на резюме (URL)',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                if (vacancies.isNotEmpty)
+                  DropdownButtonFormField<int?>(
+                    value: selectedVacancyId,
+                    decoration: const InputDecoration(labelText: 'Вакансія'),
+                    items: vacancies
+                        .map(
+                          (v) => DropdownMenuItem<int?>(
+                            value: v.id,
+                            child: Text(v.title),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (val) =>
+                        setDialogState(() => selectedVacancyId = val),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                'Скасувати',
+                style: TextStyle(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                ctx.read<RecruitingCubit>().addCandidate({
+                  'full_name': fullNameCtrl.text,
+                  'resume_url': resumeUrlCtrl.text,
+                  'status': 'new',
+                  'vacancy_id': selectedVacancyId,
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Додати'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddVacancyDialog(BuildContext ctx) {
+    final titleCtrl = TextEditingController();
+    final salaryCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
 
     showDialog(
       context: context,
@@ -35,7 +120,7 @@ class _RecruitingViewState extends State<_RecruitingView> {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         title: const Text(
-          'Новий кандидат',
+          'Нова вакансія',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         content: SizedBox(
@@ -44,15 +129,21 @@ class _RecruitingViewState extends State<_RecruitingView> {
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                controller: fullNameCtrl,
-                decoration: const InputDecoration(labelText: 'ПІБ'),
+                controller: titleCtrl,
+                decoration: const InputDecoration(labelText: 'Назва посади'),
               ),
               const SizedBox(height: 16),
               TextField(
-                controller: resumeUrlCtrl,
+                controller: salaryCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'Посилання на резюме (URL)',
+                  labelText: 'Зарплатна вилка (напр. 2000 - 3000 \$)',
                 ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: descCtrl,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'Короткий опис'),
               ),
             ],
           ),
@@ -71,14 +162,15 @@ class _RecruitingViewState extends State<_RecruitingView> {
               foregroundColor: Colors.white,
             ),
             onPressed: () {
-              ctx.read<RecruitingCubit>().addCandidate({
-                'full_name': fullNameCtrl.text,
-                'resume_url': resumeUrlCtrl.text,
-                'status': 'new',
+              ctx.read<RecruitingCubit>().addVacancy({
+                'title': titleCtrl.text,
+                'salary_range': salaryCtrl.text,
+                'description': descCtrl.text,
+                'status': 'open',
               });
               Navigator.pop(context);
             },
-            child: const Text('Додати'),
+            child: const Text('Створити'),
           ),
         ],
       ),
@@ -88,8 +180,10 @@ class _RecruitingViewState extends State<_RecruitingView> {
   Color _getStatusColor(String status) {
     switch (status) {
       case 'hired':
+      case 'open':
         return Colors.green.shade700;
       case 'rejected':
+      case 'closed':
         return Colors.red.shade700;
       case 'offer':
         return Colors.orange.shade700;
@@ -100,6 +194,12 @@ class _RecruitingViewState extends State<_RecruitingView> {
       default:
         return Colors.black87;
     }
+  }
+
+  String _getVacancyTitle(int? vacancyId, List<Vacancy> vacancies) {
+    if (vacancyId == null) return '—';
+    final match = vacancies.where((v) => v.id == vacancyId);
+    return match.isNotEmpty ? match.first.title : '—';
   }
 
   @override
@@ -128,6 +228,12 @@ class _RecruitingViewState extends State<_RecruitingView> {
               );
             }).toList();
 
+            final filteredVacancies = state.vacancies.where((vac) {
+              return vac.title.toLowerCase().contains(
+                _searchQuery.toLowerCase(),
+              );
+            }).toList();
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -136,7 +242,7 @@ class _RecruitingViewState extends State<_RecruitingView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Воронка рекрутингу',
+                      'Рекрутинг та вакансії',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
@@ -144,11 +250,20 @@ class _RecruitingViewState extends State<_RecruitingView> {
                       ),
                     ),
                     ElevatedButton.icon(
-                      onPressed: () => _showAddCandidateDialog(context),
-                      icon: const Icon(Icons.person_add_outlined, size: 20),
-                      label: const Text(
-                        'Додати кандидата',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                      onPressed: () => _selectedTab == 0
+                          ? _showAddCandidateDialog(context, state.vacancies)
+                          : _showAddVacancyDialog(context),
+                      icon: Icon(
+                        _selectedTab == 0
+                            ? Icons.person_add_outlined
+                            : Icons.work_outline,
+                        size: 20,
+                      ),
+                      label: Text(
+                        _selectedTab == 0
+                            ? 'Додати кандидата'
+                            : 'Додати вакансію',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.black,
@@ -157,7 +272,45 @@ class _RecruitingViewState extends State<_RecruitingView> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Перемикач вкладок
+                Row(
+                  children: [
+                    ChoiceChip(
+                      label: Text('Кандидати (${state.candidates.length})'),
+                      selected: _selectedTab == 0,
+                      selectedColor: Colors.black,
+                      labelStyle: TextStyle(
+                        color: _selectedTab == 0
+                            ? Colors.white
+                            : Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      onSelected: (_) => setState(() {
+                        _selectedTab = 0;
+                        _searchQuery = '';
+                      }),
+                    ),
+                    const SizedBox(width: 12),
+                    ChoiceChip(
+                      label: Text('Вакансії (${state.vacancies.length})'),
+                      selected: _selectedTab == 1,
+                      selectedColor: Colors.black,
+                      labelStyle: TextStyle(
+                        color: _selectedTab == 1
+                            ? Colors.white
+                            : Colors.black87,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      onSelected: (_) => setState(() {
+                        _selectedTab = 1;
+                        _searchQuery = '';
+                      }),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
 
                 // Основна картка з таблицею
                 Expanded(
@@ -170,14 +323,15 @@ class _RecruitingViewState extends State<_RecruitingView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Пошук
                         Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: TextField(
                             onChanged: (value) =>
                                 setState(() => _searchQuery = value),
                             decoration: InputDecoration(
-                              hintText: 'Пошук кандидата...',
+                              hintText: _selectedTab == 0
+                                  ? 'Пошук кандидата...'
+                                  : 'Пошук вакансії...',
                               prefixIcon: const Icon(
                                 Icons.search_outlined,
                                 color: Colors.grey,
@@ -195,153 +349,20 @@ class _RecruitingViewState extends State<_RecruitingView> {
                           ),
                         ),
                         const Divider(height: 1),
-
-                        // Таблиця
                         Expanded(
                           child: SingleChildScrollView(
                             child: SizedBox(
                               width: double.infinity,
-                              child: DataTable(
-                                dataRowMaxHeight: 64,
-                                dataRowMinHeight: 64,
-                                headingTextStyle: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black54,
-                                ),
-                                columns: const [
-                                  DataColumn(label: Text('ПІБ кандидата')),
-                                  DataColumn(label: Text('Резюме')),
-                                  DataColumn(label: Text('Етап (Статус)')),
-                                ],
-                                rows: filteredCandidates.map((cand) {
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        Row(
-                                          children: [
-                                            CircleAvatar(
-                                              backgroundColor:
-                                                  Colors.grey.shade100,
-                                              radius: 16,
-                                              child: const Icon(
-                                                Icons.person_outline,
-                                                size: 18,
-                                                color: Colors.black54,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text(
-                                              cand.fullName,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.link,
-                                              size: 18,
-                                              color: Colors.blue,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              cand.resumeUrl.length > 25
-                                                  ? '${cand.resumeUrl.substring(0, 25)}...'
-                                                  : cand.resumeUrl,
-                                              style: const TextStyle(
-                                                color: Colors.blue,
-                                                decoration:
-                                                    TextDecoration.underline,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Container(
-                                          height: 36,
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: _getStatusColor(
-                                              cand.status,
-                                            ).withOpacity(0.08),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: _getStatusColor(
-                                                cand.status,
-                                              ).withOpacity(0.2),
-                                            ),
-                                          ),
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownButton<String>(
-                                              value: cand.status,
-                                              icon: Icon(
-                                                Icons.keyboard_arrow_down,
-                                                color: _getStatusColor(
-                                                  cand.status,
-                                                ),
-                                                size: 18,
-                                              ),
-                                              style: TextStyle(
-                                                color: _getStatusColor(
-                                                  cand.status,
-                                                ),
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 13,
-                                              ),
-                                              items: const [
-                                                DropdownMenuItem(
-                                                  value: 'new',
-                                                  child: Text('Новий'),
-                                                ),
-                                                DropdownMenuItem(
-                                                  value: 'pending',
-                                                  child: Text('Очікує'),
-                                                ),
-                                                DropdownMenuItem(
-                                                  value: 'interviewed',
-                                                  child: Text('Інтерв\'ю'),
-                                                ),
-                                                DropdownMenuItem(
-                                                  value: 'offer',
-                                                  child: Text('Офер'),
-                                                ),
-                                                DropdownMenuItem(
-                                                  value: 'hired',
-                                                  child: Text('Найнято'),
-                                                ),
-                                                DropdownMenuItem(
-                                                  value: 'rejected',
-                                                  child: Text('Відмовлено'),
-                                                ),
-                                              ],
-                                              onChanged: (newValue) {
-                                                if (newValue != null &&
-                                                    newValue != cand.status) {
-                                                  context
-                                                      .read<RecruitingCubit>()
-                                                      .updateStatus(
-                                                        cand.id,
-                                                        newValue,
-                                                      );
-                                                }
-                                              },
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
+                              child: _selectedTab == 0
+                                  ? _buildCandidatesTable(
+                                      context,
+                                      filteredCandidates,
+                                      state.vacancies,
+                                    )
+                                  : _buildVacanciesTable(
+                                      context,
+                                      filteredVacancies,
+                                    ),
                             ),
                           ),
                         ),
@@ -355,6 +376,190 @@ class _RecruitingViewState extends State<_RecruitingView> {
           return const SizedBox();
         },
       ),
+    );
+  }
+
+  Widget _buildCandidatesTable(
+    BuildContext context,
+    List<Candidate> candidates,
+    List<Vacancy> vacancies,
+  ) {
+    return DataTable(
+      dataRowMaxHeight: 64,
+      dataRowMinHeight: 64,
+      headingTextStyle: const TextStyle(
+        fontWeight: FontWeight.w600,
+        color: Colors.black54,
+      ),
+      columns: const [
+        DataColumn(label: Text('ПІБ кандидата')),
+        DataColumn(label: Text('Вакансія')),
+        DataColumn(label: Text('Резюме')),
+        DataColumn(label: Text('Етап (Статус)')),
+      ],
+      rows: candidates.map((cand) {
+        return DataRow(
+          cells: [
+            DataCell(
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.grey.shade100,
+                    radius: 16,
+                    child: const Icon(
+                      Icons.person_outline,
+                      size: 18,
+                      color: Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    cand.fullName,
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
+            ),
+            DataCell(Text(_getVacancyTitle(cand.vacancyId, vacancies))),
+            DataCell(
+              Row(
+                children: [
+                  const Icon(Icons.link, size: 18, color: Colors.blue),
+                  const SizedBox(width: 8),
+                  Text(
+                    cand.resumeUrl.length > 25
+                        ? '${cand.resumeUrl.substring(0, 25)}...'
+                        : cand.resumeUrl,
+                    style: const TextStyle(
+                      color: Colors.blue,
+                      decoration: TextDecoration.underline,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            DataCell(
+              Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(cand.status).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _getStatusColor(cand.status).withOpacity(0.2),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: cand.status,
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: _getStatusColor(cand.status),
+                      size: 18,
+                    ),
+                    style: TextStyle(
+                      color: _getStatusColor(cand.status),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'new', child: Text('Новий')),
+                      DropdownMenuItem(value: 'pending', child: Text('Очікує')),
+                      DropdownMenuItem(
+                        value: 'interviewed',
+                        child: Text('Інтерв\'ю'),
+                      ),
+                      DropdownMenuItem(value: 'offer', child: Text('Офер')),
+                      DropdownMenuItem(value: 'hired', child: Text('Найнято')),
+                      DropdownMenuItem(
+                        value: 'rejected',
+                        child: Text('Відмовлено'),
+                      ),
+                    ],
+                    onChanged: (newValue) {
+                      if (newValue != null && newValue != cand.status) {
+                        context.read<RecruitingCubit>().updateStatus(
+                          cand.id,
+                          newValue,
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildVacanciesTable(BuildContext context, List<Vacancy> vacancies) {
+    return DataTable(
+      dataRowMaxHeight: 64,
+      dataRowMinHeight: 64,
+      headingTextStyle: const TextStyle(
+        fontWeight: FontWeight.w600,
+        color: Colors.black54,
+      ),
+      columns: const [
+        DataColumn(label: Text('Посада')),
+        DataColumn(label: Text('Зарплатна вилка')),
+        DataColumn(label: Text('Статус')),
+      ],
+      rows: vacancies.map((vac) {
+        return DataRow(
+          cells: [
+            DataCell(
+              Text(
+                vac.title,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+            ),
+            DataCell(Text(vac.salaryRange)),
+            DataCell(
+              Container(
+                height: 36,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: _getStatusColor(vac.status).withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: _getStatusColor(vac.status).withOpacity(0.2),
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: vac.status,
+                    icon: Icon(
+                      Icons.keyboard_arrow_down,
+                      color: _getStatusColor(vac.status),
+                      size: 18,
+                    ),
+                    style: TextStyle(
+                      color: _getStatusColor(vac.status),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: 'open', child: Text('Відкрита')),
+                      DropdownMenuItem(value: 'closed', child: Text('Закрита')),
+                    ],
+                    onChanged: (newValue) {
+                      if (newValue != null && newValue != vac.status) {
+                        context.read<RecruitingCubit>().updateVacancyStatus(
+                          vac.id,
+                          newValue,
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 }

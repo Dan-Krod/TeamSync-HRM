@@ -68,9 +68,21 @@ CREATE TABLE payrolls (
     FOREIGN KEY (employee_id) REFERENCES employees(id)
 );
 
+CREATE TABLE vacancies (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(100) NOT NULL,
+    department_id INTEGER,
+    description TEXT,
+    salary_range VARCHAR(50),
+    status VARCHAR(20) NOT NULL DEFAULT 'open',
+    FOREIGN KEY (department_id) REFERENCES departments(id)
+);
+
 CREATE TABLE candidates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     full_name VARCHAR(100) NOT NULL,
     status VARCHAR(20) NOT NULL,
-    resume_url VARCHAR(255)
+    resume_url VARCHAR(255),
+    vacancy_id INTEGER,
+    FOREIGN KEY (vacancy_id) REFERENCES vacancies(id)
 );

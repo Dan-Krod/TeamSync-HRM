@@ -1,7 +1,7 @@
 from app import create_app, db
 from app.models.models import (Department, Employee, LeaveRequest, 
                                 AttendanceRecord, Payroll, Document, 
-                                PerformanceReview, Candidate)
+                                PerformanceReview, Candidate, Vacancy)
 from faker import Faker
 import random
 from datetime import timedelta, datetime
@@ -117,11 +117,32 @@ def seed():
                 )
                 db.session.add(review)
 
+        vacancies = []
+        vacancy_titles = [
+            ('Senior Python Developer', '3500 - 4500 $', departments[0].id),
+            ('Flutter Web Developer', '2500 - 3500 $', departments[0].id),
+            ('HR Generalist', '1500 - 2000 $', departments[1].id),
+            ('Financial Analyst', '2000 - 2800 $', departments[2].id),
+            ('Digital Marketer', '1800 - 2500 $', departments[3].id),
+        ]
+        for title, salary, dept_id in vacancy_titles:
+            vac = Vacancy(
+                title=title,
+                department_id=dept_id,
+                description=fake.text(max_nb_chars=120),
+                salary_range=salary,
+                status=random.choice(['open', 'open', 'closed'])
+            )
+            db.session.add(vac)
+            vacancies.append(vac)
+        db.session.commit()
+
         for _ in range(15):
             candidate = Candidate(
                 full_name=f"{fake.first_name()} {fake.last_name()}",
                 status=random.choice(['pending', 'interviewed', 'hired', 'rejected']),
-                resume_url=fake.url()
+                resume_url=fake.url(),
+                vacancy_id=random.choice(vacancies).id
             )
             db.session.add(candidate)
 

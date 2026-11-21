@@ -12,9 +12,12 @@ class RecruitingLoading extends RecruitingState {}
 
 class RecruitingLoaded extends RecruitingState {
   final List<Candidate> candidates;
-  RecruitingLoaded(this.candidates);
+  final List<Vacancy> vacancies;
+
+  RecruitingLoaded(this.candidates, this.vacancies);
+
   @override
-  List<Object> get props => [candidates];
+  List<Object> get props => [candidates, vacancies];
 }
 
 class RecruitingError extends RecruitingState {

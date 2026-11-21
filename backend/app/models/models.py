@@ -87,6 +87,19 @@ class PerformanceReview(db.Model):
     score = db.Column(db.Integer, nullable=False)
     comments = db.Column(db.Text)
 
+class Vacancy(db.Model):
+    __tablename__ = 'vacancies'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    description = db.Column(db.Text)
+    salary_range = db.Column(db.String(50))
+    status = db.Column(db.String(20), default='open', nullable=False) 
+
+    department = db.relationship('Department', backref='vacancies', lazy=True)
+    candidates = db.relationship('Candidate', backref='vacancy', lazy=True)
+
 class Candidate(db.Model):
     __tablename__ = 'candidates'
     
@@ -94,6 +107,7 @@ class Candidate(db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False)
     resume_url = db.Column(db.String(255))
+    vacancy_id = db.Column(db.Integer, db.ForeignKey('vacancies.id'), nullable=True)
     
 class TimeRecord(db.Model):
     __tablename__ = 'time_records'
