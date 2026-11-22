@@ -41,10 +41,18 @@ The backend is structured into four distinct layers (**API/Blueprints**, **Servi
 | **Repository** | Architectural | `IEmployeeRepository`, `ILeaveRepository`, `IDocumentRepository` (+ SQL implementations) | Abstracts SQLAlchemy session operations from business logic (Dependency Inversion Principle). |
 
 ### Documentation & Diagrams
-- **Business Processes (Use Cases):** [docs/use_cases.md](docs/use_cases.md) | Diagram: `docs/diagrams/use_case.png`
-- **Class Architecture (UML & GoF):** [docs/class_diagram.md](docs/class_diagram.md) | Diagram: `docs/diagrams/class.png`
-- **Database Schema (ER Diagram):** [docs/database_schema.md](docs/database_schema.md) | Diagram: `docs/database/schema.png`
 
+- **Business Processes (Use Cases):** [docs/use_cases.md](docs/use_cases.md)
+
+  ![Use Case Diagram](docs/diagrams/use_case.png)
+
+- **Class Architecture (UML & GoF):** [docs/class_diagram.md](docs/class_diagram.md)
+
+  ![Class Diagram](docs/diagrams/class.png)
+
+- **Database Schema (ER Diagram):** [docs/database_schema.md](docs/database_schema.md)
+
+  ![ER Diagram](docs/database/schema.png)
 ---
 
 ## 📂 Project Structure
