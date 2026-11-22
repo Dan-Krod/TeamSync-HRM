@@ -1,12 +1,11 @@
 @startuml
+top to bottom direction
 skinparam linetype ortho
 skinparam roundcorner 8
 skinparam shadowing true
 skinparam defaultFontName "Segoe UI"
-skinparam nodesep 40
-skinparam ranksep 60
-!pragma horizontalPages 1
-page 1x2
+skinparam nodesep 140
+skinparam ranksep 45
 
 skinparam class {
     BorderColor #1C2833
@@ -19,6 +18,7 @@ skinparam class {
     BackgroundColor<<State>> #A9DFBF
     BackgroundColor<<Strategy>> #F9E79F
     BackgroundColor<<Factory>> #D7BDE2
+    BackgroundColor<<Observer>> #A3E4D7
     BackgroundColor<<REST>> #E5E7E9
     BackgroundColor<<Repository>> #EDBB99
     BackgroundColor<<Leaf>> #AED6F0
@@ -62,8 +62,6 @@ package "API & Controllers (Flask Blueprints)" as P_WEB {
     class DocumentRoutes <<REST>> {
         + generate_document(emp_id: Int): File
     }
-    
-
 }
 
 package "HR & Onboarding Module" as P_FACADE {
@@ -112,8 +110,7 @@ package "Organization Structure (Domain)" as P_ORG {
     
     IOrganizationUnit <|.. EmployeeLeaf
     IOrganizationUnit <|.. DepartmentComposite
-    EmployeeLeaf --> Employee : wraps 
-    EmployeeLeaf -[hidden]right-> DepartmentComposite
+    EmployeeLeaf -down-> Employee : wraps 
     DepartmentComposite "1" *-up-> "0..*" IOrganizationUnit
 }
 
@@ -136,7 +133,7 @@ package "Payroll System" as P_PAY {
         + calculate(emp: Employee): float
     }
     
-    PayrollService o--> "1" IPayrollStrategy : executes
+    PayrollService o-down-> "1" IPayrollStrategy : executes
     IPayrollStrategy <|.. FullTimeStrategy
     IPayrollStrategy <|.. HourlyStrategy
 }
@@ -145,7 +142,11 @@ package "Leave Management Module" as P_LEAVE {
     class LeaveRequestManager <<Context>> {
         + request: LeaveRequest
         + state: ILeaveState
+        - _observers: List<ILeaveObserver>
         - _get_state_object(): ILeaveState
+        + attach(observer: ILeaveObserver): void
+        + detach(observer: ILeaveObserver): void
+        - _notify(event: str): void
         + approve(): void
         + reject(): void
     }
@@ -171,11 +172,30 @@ package "Leave Management Module" as P_LEAVE {
     class ApprovedState <<State>> {
         + process(request: LeaveRequest): void
     }
+
+    interface ILeaveObserver <<Observer>> {
+        + update(leave_request: LeaveRequest, event: str): void
+    }
+
+    class EmailNotificationObserver <<Observer>> {
+        + update(leave_request: LeaveRequest, event: str): void
+    }
+
+    class AuditLogObserver <<Observer>> {
+        + update(leave_request: LeaveRequest, event: str): void
+    }
     
-    LeaveRequestManager o--> "1" ILeaveState : current state
-    LeaveRequestManager --> "1" LeaveRequest : manages 
+    LeaveRequestManager -right-> "1" LeaveRequest : manages
+    LeaveRequestManager o-down-> "1" ILeaveState : current state
+    LeaveRequestManager o-down-> "0..*" ILeaveObserver : notifies
     ILeaveState <|.. PendingState
     ILeaveState <|.. ApprovedState
+    ILeaveObserver <|.. EmailNotificationObserver
+    ILeaveObserver <|.. AuditLogObserver
+
+    ' Складаємо Observer під State, щоб не розтягувати по ширині
+    PendingState -[hidden]down-> ILeaveObserver
+    ApprovedState -[hidden]down-> ILeaveObserver
 }
 
 package "Document Generation Module" as P_DOC {
@@ -201,7 +221,7 @@ package "Document Generation Module" as P_DOC {
         + generate_pdf(): tuple
     }
     
-    HRDocumentFactory ..> BaseDocument : creates
+    HRDocumentFactory .down.> BaseDocument : creates
     BaseDocument <|-- ContractDocument
     BaseDocument <|-- OrderDocument
 }
@@ -240,24 +260,19 @@ package "Data Access Layer (Persistence)" as P_DATA {
     IDocumentRepository <|.. SQLDocumentRepository
 }
 
-P_WEB -[hidden]right-> P_FACADE
-P_ORG -[hidden]right-> P_PAY
-P_LEAVE -[hidden]right-> P_DOC
-
 P_WEB -[hidden]down-> P_ORG
-P_ORG -[hidden]down-> P_LEAVE
-P_LEAVE -[hidden]down-> P_DATA
-
+P_WEB -[hidden]down-> P_FACADE
 P_FACADE -[hidden]down-> P_PAY
+P_ORG -[hidden]down-> P_LEAVE
 P_PAY -[hidden]down-> P_DOC
+P_LEAVE -[hidden]down-> P_DATA
 P_DOC -[hidden]down-> P_DATA
-
 
 Employee "1" *-down-> "0..*" BaseDocument : owns 
 Employee "1" *-down-> "0..*" LeaveRequest : submits 
-PayrollService ..left.> Employee : calculates for 
+PayrollService ..> Employee : calculates for 
 
-EmployeeRoutes -right-> OnboardingFacade : delegates
+EmployeeRoutes -down-> OnboardingFacade : delegates
 LeaveRoutes -down-> LeaveRequestManager : manages
 PayrollRoutes -down-> PayrollService : triggers
 DocumentRoutes -down-> HRDocumentFactory : calls
@@ -274,6 +289,7 @@ legend bottom right
   |<#A9DFBF>| State (Кінцевий автомат станів) |
   |<#F9E79F>| Strategy (Взаємозамінні алгоритми) |
   |<#D7BDE2>| Factory Method (Генерація об'єктів) |
+  |<#A3E4D7>| Observer (Сповіщення та аудит) |
   |<#EDBB99>| Repository (SQLAlchemy/БД) |
   |<#E5E7E9>| Flask Blueprints (REST) |
   |<#FFFFFF>| Доменні сутності та моделі БД (SQLAlchemy) |

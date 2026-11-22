@@ -6,10 +6,17 @@ from app.schemas.schemas import LeaveRequestSchema
 from app.services.leave_state import LeaveRequestManager
 from app import db
 from datetime import datetime
+from app.services.observers import EmailNotificationObserver, AuditLogObserver
 
 leave_bp = Blueprint('leave_bp', __name__, url_prefix='/api/leaves')
 leave_schema = LeaveRequestSchema()
 leaves_schema = LeaveRequestSchema(many=True)
+
+def _create_manager(leave_req: LeaveRequest) -> LeaveRequestManager:
+    manager = LeaveRequestManager(leave_req)
+    manager.attach(EmailNotificationObserver())
+    manager.attach(AuditLogObserver())
+    return manager
 
 @leave_bp.route('/', methods=['POST'])
 @jwt_required()
@@ -54,7 +61,7 @@ def approve_leave(id):
         return jsonify({"error": "Немає прав доступу"}), 403
     leave_req = LeaveRequest.query.get_or_404(id)
     try:
-        manager = LeaveRequestManager(leave_req)
+        manager = _create_manager(leave_req)
         manager.approve()
         db.session.commit()
         return jsonify(leave_schema.dump(leave_req)), 200
@@ -69,7 +76,7 @@ def reject_leave(id):
         return jsonify({"error": "Немає прав доступу"}), 403
     leave_req = LeaveRequest.query.get_or_404(id)
     try:
-        manager = LeaveRequestManager(leave_req)
+        manager = _create_manager(leave_req)
         manager.reject()
         db.session.commit()
         return jsonify(leave_schema.dump(leave_req)), 200
