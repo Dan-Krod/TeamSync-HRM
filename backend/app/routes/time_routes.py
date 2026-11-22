@@ -1,9 +1,9 @@
 import json
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from app import db
-from app.models.models import AttendanceRecord, Employee
+from app.models.models import AttendanceRecord, Employee, WorkSchedule
 
 time_bp = Blueprint('time_bp', __name__, url_prefix='/api/time')
 
@@ -81,12 +81,54 @@ def check_status():
     emp_id = current_user['id']
     today = datetime.today().date()
     
-    # Шукаємо сьогоднішній запис
     existing = AttendanceRecord.query.filter_by(employee_id=emp_id, record_date=today).first()
     
-    # Якщо зміна почата, але не завершена — повертаємо True
     is_working = False
     if existing and existing.clock_in and not existing.clock_out:
         is_working = True
         
     return jsonify({"is_working": is_working}), 200
+
+@time_bp.route('/schedules', methods=['GET'])
+@jwt_required()
+def get_schedules():
+    current_user = json.loads(get_jwt_identity())
+    if current_user['role'] not in ['hr', 'admin', 'manager']:
+        return jsonify({"error": "Немає прав доступу"}), 403
+
+    schedules = WorkSchedule.query.all()
+    result = []
+    for s in schedules:
+        emp = Employee.query.get(s.employee_id)
+        result.append({
+            'id': s.id,
+            'employee_id': s.employee_id,
+            'employee_name': f"{emp.first_name} {emp.last_name}" if emp else "Невідомо",
+            'position': emp.position if emp else "",
+            'work_days': s.work_days,
+            'start_time': s.start_time,
+            'end_time': s.end_time,
+            'shift_type': s.shift_type
+        })
+    return jsonify(result), 200
+
+@time_bp.route('/schedules/<int:employee_id>', methods=['PUT'])
+@jwt_required()
+def update_schedule(employee_id):
+    current_user = json.loads(get_jwt_identity())
+    if current_user['role'] not in ['hr', 'admin']:
+        return jsonify({"error": "Немає прав доступу"}), 403
+
+    data = request.get_json()
+    schedule = WorkSchedule.query.filter_by(employee_id=employee_id).first()
+    if not schedule:
+        schedule = WorkSchedule(employee_id=employee_id)
+        db.session.add(schedule)
+
+    schedule.work_days = data.get('work_days', schedule.work_days)
+    schedule.start_time = data.get('start_time', schedule.start_time)
+    schedule.end_time = data.get('end_time', schedule.end_time)
+    schedule.shift_type = data.get('shift_type', schedule.shift_type)
+
+    db.session.commit()
+    return jsonify({"msg": "Графік оновлено"}), 200

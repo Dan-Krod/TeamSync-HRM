@@ -27,6 +27,7 @@ class Employee(db.Model):
     role = db.Column(db.String(20), nullable=False) # admin, hr, manager, user
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
     password_hash = db.Column(db.String(255), nullable=True)
+    work_schedule = db.relationship('WorkSchedule', backref='employee', uselist=False, lazy=True, cascade="all, delete-orphan")
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -118,3 +119,13 @@ class TimeRecord(db.Model):
     clock_out = db.Column(db.DateTime, nullable=True)
 
     employee = db.relationship('Employee', backref=db.backref('time_records', lazy=True))
+    
+class WorkSchedule(db.Model):
+    __tablename__ = 'work_schedules'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, unique=True)
+    work_days = db.Column(db.String(50), default='Пн-Пт', nullable=False)
+    start_time = db.Column(db.String(10), default='09:00', nullable=False)
+    end_time = db.Column(db.String(10), default='18:00', nullable=False)
+    shift_type = db.Column(db.String(30), default='Офіс', nullable=False)

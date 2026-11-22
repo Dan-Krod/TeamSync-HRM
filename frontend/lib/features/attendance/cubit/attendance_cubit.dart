@@ -10,7 +10,8 @@ class AttendanceLoading extends AttendanceState {}
 
 class AttendanceLoaded extends AttendanceState {
   final List<AttendanceRecord> records;
-  AttendanceLoaded(this.records);
+  final List<WorkSchedule> schedules;
+  AttendanceLoaded(this.records, this.schedules);
 }
 
 class AttendanceError extends AttendanceState {
@@ -24,13 +25,28 @@ class AttendanceCubit extends Cubit<AttendanceState> {
   Future<void> loadAttendance() async {
     emit(AttendanceLoading());
     try {
-      final response = await ApiClient.get('/time/');
-      final List<AttendanceRecord> records = (response as List)
+      final recordsRes = await ApiClient.get('/time/');
+      final schedulesRes = await ApiClient.get('/time/schedules');
+
+      final List<AttendanceRecord> records = (recordsRes as List)
           .map((e) => AttendanceRecord.fromJson(e))
           .toList();
-      emit(AttendanceLoaded(records));
+      final List<WorkSchedule> schedules = (schedulesRes as List)
+          .map((e) => WorkSchedule.fromJson(e))
+          .toList();
+
+      emit(AttendanceLoaded(records, schedules));
     } catch (e) {
       emit(AttendanceError('Помилка завантаження: $e'));
+    }
+  }
+
+  Future<void> updateSchedule(int employeeId, Map<String, dynamic> data) async {
+    try {
+      await ApiClient.put('/time/schedules/$employeeId', data);
+      loadAttendance();
+    } catch (e) {
+      emit(AttendanceError('Помилка оновлення графіка: $e'));
     }
   }
 }

@@ -19,6 +19,16 @@ CREATE TABLE employees (
     FOREIGN KEY (department_id) REFERENCES departments(id)
 );
 
+CREATE TABLE work_schedules (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    employee_id INTEGER NOT NULL UNIQUE,
+    work_days VARCHAR(50) NOT NULL DEFAULT 'Пн-Пт',
+    start_time VARCHAR(10) NOT NULL DEFAULT '09:00',
+    end_time VARCHAR(10) NOT NULL DEFAULT '18:00',
+    shift_type VARCHAR(30) NOT NULL DEFAULT 'Офіс',
+    FOREIGN KEY (employee_id) REFERENCES employees(id)
+);
+
 CREATE TABLE performance_reviews (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     employee_id INTEGER NOT NULL,

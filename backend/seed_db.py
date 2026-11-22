@@ -1,7 +1,7 @@
 from app import create_app, db
 from app.models.models import (Department, Employee, LeaveRequest, 
                                 AttendanceRecord, Payroll, Document, 
-                                PerformanceReview, Candidate, Vacancy)
+                                PerformanceReview, Candidate, Vacancy, WorkSchedule)
 from faker import Faker
 import random
 from datetime import timedelta, datetime
@@ -116,6 +116,32 @@ def seed():
                     comments=fake.text(max_nb_chars=100)
                 )
                 db.session.add(review)
+                
+            if random.choice([True, False]):
+                review = PerformanceReview(
+                    employee_id=emp.id,
+                    reviewer_id=random.choice(manager_ids),
+                    score=random.randint(2, 5),
+                    comments=fake.text(max_nb_chars=100)
+                )
+                db.session.add(review)
+
+            # Додай цей блок сюди:
+            schedule_presets = [
+                ('Пн-Пт', '09:00', '18:00', 'Офіс'),
+                ('Пн-Пт', '10:00', '19:00', 'Гібрид'),
+                ('Пн-Пт', '08:00', '17:00', 'Дистанційно'),
+                ('2/2', '09:00', '21:00', 'Офіс'),
+            ]
+            days, st_time, en_time, sh_type = random.choice(schedule_presets)
+            schedule = WorkSchedule(
+                employee_id=emp.id,
+                work_days=days,
+                start_time=st_time,
+                end_time=en_time,
+                shift_type=sh_type
+            )
+            db.session.add(schedule)
 
         vacancies = []
         vacancy_titles = [
