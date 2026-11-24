@@ -154,6 +154,8 @@ class _ReportsView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildDepartmentsGrid(state.departments),
+                  const SizedBox(height: 24),
+                  _buildDepartmentPayrollChart(state.departments, totalPayroll),
 
                   const SizedBox(height: 40),
                   const Text(
@@ -468,6 +470,93 @@ class _ReportsView extends StatelessWidget {
               }).toList(),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDepartmentPayrollChart(
+    List<DepartmentReport> departments,
+    double totalPayroll,
+  ) {
+    if (departments.isEmpty || totalPayroll <= 0) {
+      return const SizedBox();
+    }
+
+    // Сортуємо від найбільшого бюджету до найменшого
+    final sorted = List<DepartmentReport>.from(departments)
+      ..sort((a, b) => b.totalBudget.compareTo(a.totalBudget));
+
+    final maxBudget = sorted.first.totalBudget > 0 ? sorted.first.totalBudget : 1.0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Розподіл витрат на зарплати по відділах',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 20),
+          ...sorted.map((dept) {
+            final sharePercent = (dept.totalBudget / totalPayroll) * 100;
+            final barFactor = (dept.totalBudget / maxBudget).clamp(0.02, 1.0);
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${dept.department} (${dept.totalEmployees} ос.)',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        '₴ ${dept.totalBudget.toStringAsFixed(0)}  (${sharePercent.toStringAsFixed(1)}%)',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 12,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: FractionallySizedBox(
+                      alignment: Alignment.centerLeft,
+                      widthFactor: barFactor,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black87,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
         ],
       ),
     );

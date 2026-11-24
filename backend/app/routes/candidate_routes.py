@@ -67,15 +67,15 @@ def update_candidate(id):
                 'phone': '+380000000000',
                 'position': position,
                 'salary': salary,
-                'hire_date': date.today().isoformat(),
+                'hire_date': date.today(),
                 'role': 'user',
                 'department_id': department_id,
-                'password': 'password123',
             }
             new_emp = OnboardingFacade.onboard_new_employee(emp_data)
-
-            if new_emp and not WorkSchedule.query.filter_by(employee_id=new_emp.id).first():
-                db.session.add(WorkSchedule(employee_id=new_emp.id))
+            if new_emp:
+                new_emp.set_password('password123')
+                if not WorkSchedule.query.filter_by(employee_id=new_emp.id).first():
+                    db.session.add(WorkSchedule(employee_id=new_emp.id))
 
     db.session.commit()
     return jsonify(candidate_schema.dump(candidate)), 200
