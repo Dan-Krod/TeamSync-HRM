@@ -32,3 +32,27 @@ def add_review():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+    
+@review_bp.route('/employee/<int:emp_id>', methods=['GET'])
+@jwt_required()
+def get_employee_reviews(emp_id):
+    reviews = (
+        PerformanceReview.query
+        .filter_by(employee_id=emp_id)
+        .order_by(PerformanceReview.id.desc())
+        .all()
+    )
+    result = []
+    for r in reviews:
+        reviewer = Employee.query.get(r.reviewer_id)
+        reviewer_name = (
+            f"{reviewer.first_name} {reviewer.last_name}"
+            if reviewer else f"ID #{r.reviewer_id}"
+        )
+        result.append({
+            "id": r.id,
+            "score": r.score,
+            "comments": r.comments or "",
+            "reviewer_name": reviewer_name,
+        })
+    return jsonify({"reviews": result}), 200

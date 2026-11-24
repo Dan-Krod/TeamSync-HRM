@@ -15,14 +15,16 @@ class ReportLoading extends ReportState {}
 class ReportLoaded extends ReportState {
   final List<DepartmentReport> departments;
   final Map<String, dynamic> leavesAnalytics;
+  final List<MonthlyLeaveStat> monthlyLeaves;
 
   const ReportLoaded({
     required this.departments,
     required this.leavesAnalytics,
+    required this.monthlyLeaves,
   });
 
   @override
-  List<Object> get props => [departments, leavesAnalytics];
+  List<Object> get props => [departments, leavesAnalytics, monthlyLeaves];
 }
 
 class ReportError extends ReportState {
@@ -32,3 +34,5 @@ class ReportError extends ReportState {
   @override
   List<Object> get props => [message];
 }
+
+

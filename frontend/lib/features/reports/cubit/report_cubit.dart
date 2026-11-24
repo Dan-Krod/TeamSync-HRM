@@ -16,12 +16,20 @@ class ReportCubit extends Cubit<ReportState> {
 
       final deptData = results[0]['department_reports'] as List;
       final leavesData = results[1]['leaves_analytics'] as Map<String, dynamic>;
+      final monthlyData = (results[1]['monthly_trends'] as List? ?? []);
 
       final departments = deptData
           .map((json) => DepartmentReport.fromJson(json))
           .toList();
+      final monthlyLeaves = monthlyData
+          .map((json) => MonthlyLeaveStat.fromJson(json))
+          .toList();
 
-      emit(ReportLoaded(departments: departments, leavesAnalytics: leavesData));
+      emit(ReportLoaded(
+        departments: departments,
+        leavesAnalytics: leavesData,
+        monthlyLeaves: monthlyLeaves,
+      ));
     } catch (e) {
       emit(ReportError('Помилка завантаження звітів: ${e.toString()}'));
     }

@@ -26,11 +26,15 @@ class _RecruitingView extends StatefulWidget {
 class _RecruitingViewState extends State<_RecruitingView> {
   String _searchQuery = '';
   int _selectedTab = 0;
+  String _candidateStatusFilter = 'all';
+  String _vacancyStatusFilter = 'all';
 
   void _showAddCandidateDialog(BuildContext ctx, List<Vacancy> vacancies) {
     final fullNameCtrl = TextEditingController();
     final resumeUrlCtrl = TextEditingController();
-    int? selectedVacancyId = vacancies.isNotEmpty ? vacancies.first.id : null;
+    final openVacancies = vacancies.where((v) => v.status == 'open').toList();
+    int? selectedVacancyId =
+        openVacancies.isNotEmpty ? openVacancies.first.id : null;
 
     showDialog(
       context: context,
@@ -61,11 +65,11 @@ class _RecruitingViewState extends State<_RecruitingView> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                if (vacancies.isNotEmpty)
+                if (openVacancies.isNotEmpty)
                   DropdownButtonFormField<int?>(
                     value: selectedVacancyId,
                     decoration: const InputDecoration(labelText: 'Вакансія'),
-                    items: vacancies
+                    items: openVacancies
                         .map(
                           (v) => DropdownMenuItem<int?>(
                             value: v.id,
@@ -75,6 +79,14 @@ class _RecruitingViewState extends State<_RecruitingView> {
                         .toList(),
                     onChanged: (val) =>
                         setDialogState(() => selectedVacancyId = val),
+                  )
+                else
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Немає відкритих вакансій',
+                      style: TextStyle(color: Colors.redAccent, fontSize: 13),
+                    ),
                   ),
               ],
             ),
@@ -92,15 +104,17 @@ class _RecruitingViewState extends State<_RecruitingView> {
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
               ),
-              onPressed: () {
-                ctx.read<RecruitingCubit>().addCandidate({
-                  'full_name': fullNameCtrl.text,
-                  'resume_url': resumeUrlCtrl.text,
-                  'status': 'new',
-                  'vacancy_id': selectedVacancyId,
-                });
-                Navigator.pop(context);
-              },
+              onPressed: openVacancies.isEmpty
+                  ? null
+                  : () {
+                      ctx.read<RecruitingCubit>().addCandidate({
+                        'full_name': fullNameCtrl.text,
+                        'resume_url': resumeUrlCtrl.text,
+                        'status': 'new',
+                        'vacancy_id': selectedVacancyId,
+                      });
+                      Navigator.pop(context);
+                    },
               child: const Text('Додати'),
             ),
           ],
@@ -223,15 +237,21 @@ class _RecruitingViewState extends State<_RecruitingView> {
           }
           if (state is RecruitingLoaded) {
             final filteredCandidates = state.candidates.where((cand) {
-              return cand.fullName.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              );
+              final matchesSearch = cand.fullName
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase());
+              final matchesStatus = _candidateStatusFilter == 'all' ||
+                  cand.status == _candidateStatusFilter;
+              return matchesSearch && matchesStatus;
             }).toList();
 
             final filteredVacancies = state.vacancies.where((vac) {
-              return vac.title.toLowerCase().contains(
-                _searchQuery.toLowerCase(),
-              );
+              final matchesSearch = vac.title
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase());
+              final matchesStatus = _vacancyStatusFilter == 'all' ||
+                  vac.status == _vacancyStatusFilter;
+              return matchesSearch && matchesStatus;
             }).toList();
 
             return Column(
@@ -325,27 +345,72 @@ class _RecruitingViewState extends State<_RecruitingView> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(20.0),
-                          child: TextField(
-                            onChanged: (value) =>
-                                setState(() => _searchQuery = value),
-                            decoration: InputDecoration(
-                              hintText: _selectedTab == 0
-                                  ? 'Пошук кандидата...'
-                                  : 'Пошук вакансії...',
-                              prefixIcon: const Icon(
-                                Icons.search_outlined,
-                                color: Colors.grey,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  onChanged: (value) =>
+                                      setState(() => _searchQuery = value),
+                                  decoration: InputDecoration(
+                                    hintText: _selectedTab == 0
+                                        ? 'Пошук кандидата...'
+                                        : 'Пошук вакансії...',
+                                    prefixIcon: const Icon(
+                                      Icons.search_outlined,
+                                      color: Colors.grey,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0,
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: _selectedTab == 0
+                                      ? DropdownButton<String>(
+                                          value: _candidateStatusFilter,
+                                          items: const [
+                                            DropdownMenuItem(value: 'all', child: Text('Усі статуси')),
+                                            DropdownMenuItem(value: 'new', child: Text('Новий')),
+                                            DropdownMenuItem(value: 'pending', child: Text('Очікує')),
+                                            DropdownMenuItem(value: 'interviewed', child: Text('Інтерв\'ю')),
+                                            DropdownMenuItem(value: 'offer', child: Text('Офер')),
+                                            DropdownMenuItem(value: 'hired', child: Text('Найнято')),
+                                            DropdownMenuItem(value: 'rejected', child: Text('Відмовлено')),
+                                          ],
+                                          onChanged: (val) {
+                                            if (val != null) {
+                                              setState(() => _candidateStatusFilter = val);
+                                            }
+                                          },
+                                        )
+                                      : DropdownButton<String>(
+                                          value: _vacancyStatusFilter,
+                                          items: const [
+                                            DropdownMenuItem(value: 'all', child: Text('Усі статуси')),
+                                            DropdownMenuItem(value: 'open', child: Text('Відкриті')),
+                                            DropdownMenuItem(value: 'closed', child: Text('Закриті')),
+                                          ],
+                                          onChanged: (val) {
+                                            if (val != null) {
+                                              setState(() => _vacancyStatusFilter = val);
+                                            }
+                                          },
+                                        ),
+                                ),
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
+                            ],
                           ),
                         ),
                         const Divider(height: 1),

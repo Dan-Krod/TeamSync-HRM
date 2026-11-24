@@ -17,3 +17,26 @@ class DepartmentReport {
     );
   }
 }
+
+class MonthlyLeaveStat {
+  final String month;
+  final int vacation;
+  final int sick;
+  final int businessTrip;
+
+  MonthlyLeaveStat({
+    required this.month,
+    required this.vacation,
+    required this.sick,
+    required this.businessTrip,
+  });
+
+  factory MonthlyLeaveStat.fromJson(Map<String, dynamic> json) {
+    return MonthlyLeaveStat(
+      month: json['month'] ?? '',
+      vacation: json['vacation'] ?? 0,
+      sick: json['sick'] ?? 0,
+      businessTrip: json['business_trip'] ?? 0,
+    );
+  }
+}

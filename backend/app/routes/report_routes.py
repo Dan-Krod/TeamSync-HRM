@@ -39,11 +39,7 @@ def get_department_reports():
 @report_bp.route('/leaves-analytics', methods=['GET'])
 def get_leaves_analytics():
     """
-    Аналітика по відпустках і лікарняних
-    ---
-    responses:
-      200:
-        description: Згрупована статистика заявок за типами
+    Аналітика по відпустках і лікарняних (загальна + помісячна динаміка)
     """
     analytics = db.session.query(
         LeaveRequest.type, 
@@ -51,7 +47,30 @@ def get_leaves_analytics():
     ).group_by(LeaveRequest.type).all()
     
     result = {item.type: item.count for item in analytics}
-    return jsonify({"leaves_analytics": result}), 200
+
+    all_leaves = LeaveRequest.query.order_by(LeaveRequest.start_date.asc()).all()
+    monthly_map = {}
+    for lr in all_leaves:
+        if not lr.start_date:
+            continue
+        month_key = lr.start_date.strftime('%Y-%m')
+        if month_key not in monthly_map:
+            monthly_map[month_key] = {'month': month_key, 'vacation': 0, 'sick': 0, 'business_trip': 0}
+        
+        l_type = (lr.type or '').lower()
+        if l_type in ['vacation', 'annual']:
+            monthly_map[month_key]['vacation'] += 1
+        elif l_type == 'sick':
+            monthly_map[month_key]['sick'] += 1
+        elif l_type == 'business_trip':
+            monthly_map[month_key]['business_trip'] += 1
+
+    monthly_trends = [monthly_map[k] for k in sorted(monthly_map.keys())]
+
+    return jsonify({
+        "leaves_analytics": result,
+        "monthly_trends": monthly_trends
+    }), 200
 
 @report_bp.route('/export', methods=['GET'])
 @jwt_required()

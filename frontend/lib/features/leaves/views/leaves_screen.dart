@@ -24,6 +24,8 @@ class _LeavesView extends StatefulWidget {
 
 class _LeavesViewState extends State<_LeavesView> {
   String _searchQuery = '';
+  String _statusFilter = 'all';
+  String _typeFilter = 'all';
 
   String _getLeaveTypeName(String type) {
     switch (type.toLowerCase()) {
@@ -103,9 +105,15 @@ class _LeavesViewState extends State<_LeavesView> {
           }
           if (state is LeaveLoaded) {
             final filteredRequests = state.requests.where((req) {
-              final searchTarget = '${req.employeeId} ${req.type}'
-                  .toLowerCase();
-              return searchTarget.contains(_searchQuery.toLowerCase());
+              final searchTarget = '${req.employeeId} ${req.type}'.toLowerCase();
+              final matchesSearch = searchTarget.contains(_searchQuery.toLowerCase());
+              final matchesStatus = _statusFilter == 'all' ||
+                  req.status.toLowerCase() == _statusFilter;
+              final reqType = req.type.toLowerCase();
+              final matchesType = _typeFilter == 'all' ||
+                  reqType == _typeFilter ||
+                  (_typeFilter == 'annual' && reqType == 'vacation');
+              return matchesSearch && matchesStatus && matchesType;
             }).toList();
 
             return Column(
@@ -134,25 +142,74 @@ class _LeavesViewState extends State<_LeavesView> {
                         // Пошук
                         Padding(
                           padding: const EdgeInsets.all(20.0),
-                          child: TextField(
-                            onChanged: (value) =>
-                                setState(() => _searchQuery = value),
-                            decoration: InputDecoration(
-                              hintText: 'Пошук за ID працівника або типом...',
-                              prefixIcon: const Icon(
-                                Icons.search_outlined,
-                                color: Colors.grey,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  onChanged: (value) =>
+                                      setState(() => _searchQuery = value),
+                                  decoration: InputDecoration(
+                                    hintText: 'Пошук за ID працівника або типом...',
+                                    prefixIcon: const Icon(
+                                      Icons.search_outlined,
+                                      color: Colors.grey,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0,
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _typeFilter,
+                                    items: const [
+                                      DropdownMenuItem(value: 'all', child: Text('Усі типи')),
+                                      DropdownMenuItem(value: 'annual', child: Text('Щорічна')),
+                                      DropdownMenuItem(value: 'sick', child: Text('Лікарняний')),
+                                      DropdownMenuItem(value: 'unpaid', child: Text('За свій рахунок')),
+                                      DropdownMenuItem(value: 'business_trip', child: Text('Відрядження')),
+                                    ],
+                                    onChanged: (val) {
+                                      if (val != null) setState(() => _typeFilter = val);
+                                    },
+                                  ),
+                                ),
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _statusFilter,
+                                    items: const [
+                                      DropdownMenuItem(value: 'all', child: Text('Усі статуси')),
+                                      DropdownMenuItem(value: 'pending', child: Text('Очікує')),
+                                      DropdownMenuItem(value: 'approved', child: Text('Погоджено')),
+                                      DropdownMenuItem(value: 'rejected', child: Text('Відхилено')),
+                                    ],
+                                    onChanged: (val) {
+                                      if (val != null) setState(() => _statusFilter = val);
+                                    },
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                         const Divider(height: 1),

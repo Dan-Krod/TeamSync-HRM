@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/report_cubit.dart';
 import '../cubit/report_state.dart';
 import '../../../core/api/api_client.dart';
+import '../models/report_models.dart';
 
 class ReportsScreen extends StatelessWidget {
   const ReportsScreen({super.key});
@@ -161,6 +162,14 @@ class _ReportsView extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   _buildLeavesAnalytics(state.leavesAnalytics),
+                  const SizedBox(height: 32),
+                  const Text(
+                    'Динаміка відпусток та лікарняних по місяцях',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 16),
+                  _buildMonthlyLeavesChart(state.monthlyLeaves),
+                  const SizedBox(height: 32),
                 ],
               ),
             );
@@ -258,6 +267,8 @@ class _ReportsView extends StatelessWidget {
           return 'За свій рахунок';
         case 'business_trip':
           return 'Відрядження';
+        case 'vacation':
+          return 'Відпустка';
         default:
           return key.toUpperCase();
       }
@@ -330,6 +341,135 @@ class _ReportsView extends StatelessWidget {
             ),
           )
           .toList(),
+    );
+  }
+
+  Widget _buildMonthlyLeavesChart(List<MonthlyLeaveStat> stats) {
+    if (stats.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: const Text(
+          'Немає даних для побудови графіка',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    int maxVal = 1;
+    for (final s in stats) {
+      if (s.vacation > maxVal) maxVal = s.vacation;
+      if (s.sick > maxVal) maxVal = s.sick;
+      if (s.businessTrip > maxVal) maxVal = s.businessTrip;
+    }
+
+    const double maxBarHeight = 160.0;
+
+    Widget buildBar(int value, Color color) {
+      final height = value == 0 ? 4.0 : (value / maxVal) * maxBarHeight;
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          if (value > 0)
+            Text(
+              '$value',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.black54),
+            ),
+          const SizedBox(height: 4),
+          Container(
+            width: 14,
+            height: height,
+            decoration: BoxDecoration(
+              color: value == 0 ? Colors.grey.shade200 : color,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget buildLegendItem(String label, Color color) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 12,
+            height: 12,
+            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)),
+          ),
+          const SizedBox(width: 6),
+          Text(label, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500)),
+        ],
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24.0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Легенда
+          Wrap(
+            spacing: 20,
+            children: [
+              buildLegendItem('Відпустки', Colors.green.shade600),
+              buildLegendItem('Лікарняні', Colors.orange.shade600),
+              buildLegendItem('Відрядження', Colors.blue.shade600),
+            ],
+          ),
+          const SizedBox(height: 24),
+          // Стовпчики по місяцях
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: stats.map((s) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 24.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        height: maxBarHeight + 24,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            buildBar(s.vacation, Colors.green.shade600),
+                            const SizedBox(width: 4),
+                            buildBar(s.sick, Colors.orange.shade600),
+                            const SizedBox(width: 4),
+                            buildBar(s.businessTrip, Colors.blue.shade600),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        s.month,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -28,6 +28,8 @@ class _EmployeesView extends StatefulWidget {
 
 class _EmployeesViewState extends State<_EmployeesView> {
   String _searchQuery = '';
+  int? _selectedDepartmentId; 
+  String _sortBy = 'name_asc'; 
 
   void _showSnackBar(String message, Color color) {
     ScaffoldMessenger.of(
@@ -60,6 +62,246 @@ class _EmployeesViewState extends State<_EmployeesView> {
     } catch (e) {
       _showSnackBar('Помилка: $e', Colors.red);
     }
+  }
+
+  Future<void> _calculatePayroll(int empId, String empName) async {
+    _showSnackBar('Розрахунок зарплати для $empName...', Colors.blue);
+    try {
+      final response = await ApiClient.post('/payrolls/calculate/$empId', {});
+      final netPay = response['net_pay'];
+      final period = response['period'];
+      _showSnackBar(
+        'Нараховано $empName: ₴ $netPay ($period)',
+        Colors.green,
+      );
+    } catch (e) {
+      _showSnackBar('Помилка нарахування ЗП: $e', Colors.red);
+    }
+  }
+
+  void _showReviewDialog(Employee emp) {
+    int selectedScore = 5;
+    final commentsCtrl = TextEditingController();
+    List<dynamic> reviews = [];
+    bool isLoading = true;
+    bool initialized = false;
+
+    Future<void> loadReviews(StateSetter setDialogState) async {
+      try {
+        final data = await ApiClient.get('/reviews/employee/${emp.id}');
+        setDialogState(() {
+          reviews = (data['reviews'] as List?) ?? [];
+          isLoading = false;
+        });
+      } catch (e) {
+        setDialogState(() => isLoading = false);
+      }
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) {
+          if (!initialized) {
+            initialized = true;
+            loadReviews(setDialogState);
+          }
+
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: Text(
+              'Оцінки (KPI): ${emp.firstName} ${emp.lastName}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            content: SizedBox(
+              width: 460,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Історія відгуків',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16),
+                        child: Center(
+                          child: CircularProgressIndicator(color: Colors.black),
+                        ),
+                      )
+                    else if (reviews.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Text(
+                          'Ще немає жодної оцінки',
+                          style: TextStyle(color: Colors.grey, fontSize: 13),
+                        ),
+                      )
+                    else
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 200),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: reviews.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          itemBuilder: (_, index) {
+                            final rev = reviews[index];
+                            return Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        rev['reviewer_name'] ?? 'Керівник',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.shade100,
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          '${rev['score']} / 5',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                            color: Colors.amber.shade900,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if ((rev['comments'] ?? '')
+                                      .toString()
+                                      .isNotEmpty) ...[
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      rev['comments'],
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 16),
+                      child: Divider(height: 1),
+                    ),
+                    const Text(
+                      'Додати нову оцінку',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
+                        color: Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<int>(
+                      value: selectedScore,
+                      decoration: const InputDecoration(
+                        labelText: 'Оцінка продуктивності (1–5)',
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 5, child: Text('5 — Відмінно')),
+                        DropdownMenuItem(value: 4, child: Text('4 — Добре')),
+                        DropdownMenuItem(value: 3, child: Text('3 — Задовільно')),
+                        DropdownMenuItem(
+                          value: 2,
+                          child: Text('2 — Потребує покращення'),
+                        ),
+                        DropdownMenuItem(
+                          value: 1,
+                          child: Text('1 — Незадовільно'),
+                        ),
+                      ],
+                      onChanged: (val) {
+                        if (val != null) {
+                          setDialogState(() => selectedScore = val);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: commentsCtrl,
+                      maxLines: 3,
+                      decoration: const InputDecoration(
+                        labelText: 'Коментар / KPI',
+                        hintText: 'Досягнення, зони росту...',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text(
+                  'Закрити',
+                  style: TextStyle(color: Colors.grey),
+                ),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                ),
+                onPressed: () async {
+                  try {
+                    await ApiClient.post('/reviews/', {
+                      'employee_id': emp.id,
+                      'score': selectedScore,
+                      'comments': commentsCtrl.text.trim(),
+                    });
+                    commentsCtrl.clear();
+                    await loadReviews(setDialogState);
+                    _showSnackBar(
+                      'Оцінку ($selectedScore/5) для ${emp.firstName} збережено',
+                      Colors.green,
+                    );
+                  } catch (e) {
+                    _showSnackBar('Помилка збереження оцінки: $e', Colors.red);
+                  }
+                },
+                child: const Text('Додати оцінку'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   void _showEmployeeDialog({Employee? employee}) {
@@ -226,8 +468,26 @@ class _EmployeesViewState extends State<_EmployeesView> {
           if (state is EmployeeLoaded) {
             final filteredEmployees = state.employees.where((emp) {
               final fullName = '${emp.firstName} ${emp.lastName}'.toLowerCase();
-              return fullName.contains(_searchQuery.toLowerCase());
+              final matchesSearch = fullName.contains(_searchQuery.toLowerCase()) ||
+                  emp.position.toLowerCase().contains(_searchQuery.toLowerCase());
+              final matchesDept = _selectedDepartmentId == null ||
+                  emp.departmentId == _selectedDepartmentId;
+              return matchesSearch && matchesDept;
             }).toList();
+
+            filteredEmployees.sort((a, b) {
+              switch (_sortBy) {
+                case 'name_desc':
+                  return '${b.firstName} ${b.lastName}'.compareTo('${a.firstName} ${a.lastName}');
+                case 'salary_desc':
+                  return b.salary.compareTo(a.salary);
+                case 'salary_asc':
+                  return a.salary.compareTo(b.salary);
+                case 'name_asc':
+                default:
+                  return '${a.firstName} ${a.lastName}'.compareTo('${b.firstName} ${b.lastName}');
+              }
+            });
 
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,25 +530,75 @@ class _EmployeesViewState extends State<_EmployeesView> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(20.0),
-                          child: TextField(
-                            onChanged: (value) =>
-                                setState(() => _searchQuery = value),
-                            decoration: InputDecoration(
-                              hintText: 'Пошук співробітника...',
-                              prefixIcon: const Icon(
-                                Icons.search_outlined,
-                                color: Colors.grey,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 2,
+                                child: TextField(
+                                  onChanged: (value) =>
+                                      setState(() => _searchQuery = value),
+                                  decoration: InputDecoration(
+                                    hintText: 'Пошук за ім\'ям або посадою...',
+                                    prefixIcon: const Icon(
+                                      Icons.search_outlined,
+                                      color: Colors.grey,
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              filled: true,
-                              fillColor: Colors.grey.shade50,
-                              contentPadding: const EdgeInsets.symmetric(
-                                vertical: 0,
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int?>(
+                                    value: _selectedDepartmentId,
+                                    hint: const Text('Усі відділи'),
+                                    items: const [
+                                      DropdownMenuItem(value: null, child: Text('Усі відділи')),
+                                      DropdownMenuItem(value: 1, child: Text('Management')),
+                                      DropdownMenuItem(value: 2, child: Text('HR')),
+                                      DropdownMenuItem(value: 3, child: Text('IT')),
+                                      DropdownMenuItem(value: 4, child: Text('Finance')),
+                                    ],
+                                    onChanged: (val) =>
+                                        setState(() => _selectedDepartmentId = val),
+                                  ),
+                                ),
                               ),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
-                                borderSide: BorderSide.none,
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: _sortBy,
+                                    items: const [
+                                      DropdownMenuItem(value: 'name_asc', child: Text('Ім\'я (А–Я)')),
+                                      DropdownMenuItem(value: 'name_desc', child: Text('Ім\'я (Я–А)')),
+                                      DropdownMenuItem(value: 'salary_desc', child: Text('Зарплата (спадання)')),
+                                      DropdownMenuItem(value: 'salary_asc', child: Text('Зарплата (зростання)')),
+                                    ],
+                                    onChanged: (val) {
+                                      if (val != null) setState(() => _sortBy = val);
+                                    },
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
                         ),
                         const Divider(height: 1),
@@ -398,6 +708,9 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                                 'order',
                                               );
                                             }
+                                            if (value == 'payroll') {
+                                              _calculatePayroll(emp.id, '${emp.firstName} ${emp.lastName}');
+                                            }
                                             if (value == 'edit') {
                                               _showEmployeeDialog(
                                                 employee: emp,
@@ -407,6 +720,9 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                               context
                                                   .read<EmployeeCubit>()
                                                   .deleteEmployee(emp.id);
+                                            }
+                                            if (value == 'review') {
+                                              _showReviewDialog(emp);
                                             }
                                           },
                                           itemBuilder: (context) => [
@@ -435,6 +751,34 @@ class _EmployeesViewState extends State<_EmployeesView> {
                                                   ),
                                                   SizedBox(width: 12),
                                                   Text('Наказ про призначення'),
+                                                ],
+                                              ),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'payroll',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.payments_outlined,
+                                                    color: Colors.green,
+                                                    size: 20,
+                                                  ),
+                                                  SizedBox(width: 12),
+                                                  Text('Нарахувати ЗП'),
+                                                ],
+                                              ),
+                                            ),
+                                            const PopupMenuItem(
+                                              value: 'review',
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.star_outline_rounded,
+                                                    color: Colors.amber,
+                                                    size: 20,
+                                                  ),
+                                                  SizedBox(width: 12),
+                                                  Text('Оцінити (KPI)'),
                                                 ],
                                               ),
                                             ),
