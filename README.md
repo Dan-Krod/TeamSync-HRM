@@ -1,47 +1,126 @@
-# TeamSync-HRM - Human Resource Management System (HRM)
+# TeamSync-HRM — Human Resource Management System
 
-StaffFlow is a comprehensive HRM web application designed to streamline employee management, time tracking, and HR processes. The system provides a unified platform for both administrators and employees to manage daily HR operations efficiently.
+**TeamSync-HRM** is a full-stack Human Resource Management web application designed to streamline employee onboarding, recruiting, leave workflows, work schedules, payroll calculations, document generation, and HR analytics. Built with a Flask REST API backend and a Flutter Web frontend, the system follows a clean layered architecture powered by GoF design patterns and SOLID principles.
 
-## 🚀 Features
+---
 
-*   **Employee Directory:** Complete records including personal details, contact info, job titles, and department hierarchy.
-*   **Leave Management:** Automated request and approval workflows for vacations, sick leaves, and business trips.
-*   **Time & Attendance:** Work schedule tracking and daily presence logging.
-*   **Recruitment System:** Job vacancy management and applicant tracking.
-*   **Document Management:** Secure storage for HR documents, contracts, and internal orders.
-*   **Employee Self-Service Portal:** A personal dashboard for employees to submit leave requests, view salary details, and track their schedule.
-*   **HR Analytics & Reporting:** Real-time dashboards generating reports on departmental headcount, payroll expenses, and leave statistics.
+## 🚀 Key Features
 
-## 🛠 Tech Stack (To Be Updated)
+- **Employee Directory & Onboarding:** Full CRUD management of employee records, department assignments, and automated onboarding via a unified Facade.
+- **Recruiting & Vacancies:** Management of open/closed job vacancies linked to departments and a candidate hiring pipeline (`new` → `pending` → `interviewed` → `offer` → `hired` / `rejected`).
+- **Role-Based Access Control (RBAC):** Secure JWT authentication separating permissions for `admin`, `hr`, `manager`, and `user` roles.
+- **Leave Management & Notifications:** Automated leave request submission, approval, and rejection workflows managed by a State machine with automated event notifications and audit logging via the Observer pattern.
+- **Time, Attendance & Work Schedules:** Daily clock-in/clock-out shift tracking alongside individual employee work schedules (work days, shift hours, and office/remote/hybrid format).
+- **Dynamic Payroll System:** Flexible salary calculation supporting multiple compensation models (Full-Time and Hourly) via the Strategy pattern.
+- **HR Document Generation:** Automated PDF generation for employment contracts and internal orders using HTML templates and Factory Method.
+- **Performance Reviews & HR Analytics:** Employee performance evaluations and real-time departmental headcount and payroll budget aggregation (Composite pattern) with PDF report export.
 
-*   **Backend:** Python (REST API)
-*   **Frontend:** Flutter Web / HTML
-*   **Database:** PostgreSQL / SQLite
-*   **Architecture & Patterns:** GoF Design Patterns, GRASP, SOLID principles.
+---
 
-## 🏗 System Architecture & Use Cases
+## 🛠 Tech Stack
 
-The application architecture relies on a strict separation of concerns among different user roles (Employees, Managers, HR, Candidates) and external APIs. 
+| Layer | Technologies |
+| :--- | :--- |
+| **Backend** | Python 3, Flask, Flask-SQLAlchemy, Flask-JWT-Extended, Flask-CORS, Marshmallow, ReportLab |
+| **Frontend** | Flutter Web (Dart), BLoC / Cubit (State Management), GoRouter (Navigation & Guards), Material 3 |
+| **Database** | SQLite (via SQLAlchemy ORM) — 10 relational tables |
+| **Architecture** | Layered Architecture (Blueprints → Services → Domain Models → Repositories), 6 GoF Patterns, SOLID |
 
-### 1. Business Processes (Use Cases)
-Defines user roles and core system workflows (`<<include>>` and `<<extend>>`).
-* 📄 [Read Use Case Documentation](docs/use_cases.md)
-* 🖼️ **Diagram:** `docs/diagrams/use_case.png`
+---
 
-### 2. Class Architecture (UML & GoF Patterns)
-Illustrates the Layered Architecture, REST controllers, and the implementation of 5 GoF patterns (Facade, State, Strategy, Composite, Factory Method) adhering to SOLID principles.
-* 📄 [Read Class Architecture Documentation](docs/class_diagram.md)
-* 🖼️ **Diagram:** `docs/diagrams/class.png`
+## 🏗 System Architecture & Design Patterns
 
-### 3. Database Schema (ER Diagram)
-A robust relational database schema consisting of 8 tables, designed to support multiple business roles and modular scaling (e.g., isolated recruitment data).
-* 📄 [Read Database Schema Documentation](docs/database_schema.md)
-* 🖼️ **Diagram:** `docs/database/schema.png`
+The backend is structured into four distinct layers (**API/Blueprints**, **Services**, **Domain Models**, and **Data Access Layer**) and implements the following patterns:
+
+| Pattern | Category | Implementation | Responsibility |
+| :--- | :--- | :--- | :--- |
+| **Facade** | Structural (GoF) | `OnboardingFacade` | Provides a single entry point (`onboard_new_employee`) that coordinates DB persistence and initial contract generation. |
+| **Composite** | Structural (GoF) | `IOrganizationUnit`, `DepartmentComposite`, `EmployeeLeaf` | Represents departments and employees as a tree structure to recursively calculate headcount and payroll budgets. |
+| **Factory Method** | Creational (GoF) | `HRDocumentFactory`, `BaseDocument`, `ContractDocument`, `OrderDocument` | Dynamically instantiates and renders PDF documents based on document type without modifying client code (OCP). |
+| **State** | Behavioral (GoF) | `LeaveRequestManager`, `ILeaveState`, `PendingState`, `ApprovedState` | Encapsulates leave request lifecycle transitions and prevents invalid state operations. |
+| **Observer** | Behavioral (GoF) | `ILeaveObserver`, `EmailNotificationObserver`, `AuditLogObserver` | Automatically notifies subscribers and logs audit events whenever a leave request changes its status. |
+| **Strategy** | Behavioral (GoF) | `PayrollService`, `IPayrollStrategy`, `FullTimeStrategy`, `HourlyStrategy` | Allows runtime switching between salary calculation algorithms depending on employee contract terms. |
+| **Repository** | Architectural | `IEmployeeRepository`, `ILeaveRepository`, `IDocumentRepository` (+ SQL implementations) | Abstracts SQLAlchemy session operations from business logic (Dependency Inversion Principle). |
+
+### Documentation & Diagrams
+
+- **Business Processes (Use Cases):** [docs/use_cases.md](docs/use_cases.md)
+
+  ![Use Case Diagram](docs/diagrams/use_case.png)
+
+- **Class Architecture (UML & GoF):** [docs/class_diagram.md](docs/class_diagram.md)
+
+  ![Class Diagram](docs/diagrams/class.png)
+
+- **Database Schema (ER Diagram):** [docs/database_schema.md](docs/database_schema.md)
+
+  ![ER Diagram](docs/database/schema.png)
+
+- **HRM cabinet (UI):**
+
+  ![HRM cabinet](docs/ui/hrm_cabinet.png)
+
+- **Employee cabinet (UI):**
+
+  ![Employee cabinet](docs/ui/emp_cabinet.png)
+
+---
 
 ## 📂 Project Structure
 
-*(To be populated as the project evolves)*
-
-## ⚙️ Setup Instructions
-
-*(To be added)*
+```text
+TeamSync-HRM/
+├── backend/
+│   ├── app/
+│   │   ├── __init__.py                   # Flask app initialization & extensions
+│   │   ├── models/
+│   │   │   └── models.py                 # SQLAlchemy ORM models (10 tables)
+│   │   ├── repositories/                 # Data Access Layer (Repository pattern)
+│   │   │   ├── employee_repository.py    # SQLEmployeeRepository
+│   │   │   ├── leave_repository.py       # SQLLeaveRepository
+│   │   │   └── document_repository.py    # SQLDocumentRepository
+│   │   ├── routes/                       # Flask Blueprints (REST API controllers)
+│   │   │   ├── auth_routes.py            # Login & JWT token generation
+│   │   │   ├── employee_routes.py        # Employee CRUD & onboarding
+│   │   │   ├── candidate_routes.py       # Recruiting pipeline & vacancies CRUD
+│   │   │   ├── leave_routes.py           # Leave request workflows
+│   │   │   ├── payroll_routes.py         # Payroll calculation endpoints
+│   │   │   ├── document_routes.py        # PDF document generation
+│   │   │   ├── report_routes.py          # Analytics & PDF report export
+│   │   │   ├── review_routes.py          # Performance reviews
+│   │   │   └── time_routes.py            # Clock-in/out & work schedules
+│   │   ├── schemas/
+│   │   │   └── schemas.py                # Marshmallow serialization schemas
+│   │   ├── services/                     # GoF Design Patterns implementation
+│   │   │   ├── onboarding_facade.py      # Facade pattern
+│   │   │   ├── document_factory.py       # Factory Method pattern
+│   │   │   ├── leave_state.py            # State pattern + Observer subject
+│   │   │   ├── observers.py              # Observer pattern (Email & Audit)
+│   │   │   ├── organization_composite.py # Composite pattern
+│   │   │   └── payroll_strategy.py       # Strategy pattern
+│   │   └── templates/                    # HTML templates for PDF rendering
+│   ├── seed.py                           # Database seeding script
+│   ├── run.py                            # Flask server entry point
+│   └── requirements.txt                  # Python dependencies
+│
+└── frontend/
+    ├── lib/
+    │   ├── core/                         # App-wide configuration
+    │   │   ├── api/
+    │   │   │   └── api_client.dart       # Centralized HTTP client
+    │   │   ├── router/
+    │   │   │   └── app_router.dart       # GoRouter setup & Route Guards
+    │   │   └── theme/                    # Material 3 theme configuration
+    │   ├── features/                     # Feature-first modules
+    │   │   ├── attendance/               # Attendance tracking & work schedules
+    │   │   ├── auth/                     # Authentication module
+    │   │   ├── dashboard/                # Main dashboard
+    │   │   ├── employees/                # Employee management (cubit, models, views)
+    │   │   ├── leaves/                   # Leave management module
+    │   │   ├── recruiting/               # Candidates pipeline & vacancies
+    │   │   └── reports/                  # Analytics & reports module
+    │   ├── shared/
+    │   │   └── widgets/                  # Reusable UI components
+    │   └── main.dart                     # Flutter entry point
+    ├── pubspec.yaml                      # Flutter dependencies
+    └── web/                              # Web build configuration

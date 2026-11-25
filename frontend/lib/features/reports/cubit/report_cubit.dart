@@ -1,0 +1,37 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../core/api/api_client.dart';
+import '../models/report_models.dart';
+import 'report_state.dart';
+
+class ReportCubit extends Cubit<ReportState> {
+  ReportCubit() : super(ReportInitial());
+
+  Future<void> fetchReports() async {
+    emit(ReportLoading());
+    try {
+      final results = await Future.wait([
+        ApiClient.get('/reports/departments'),
+        ApiClient.get('/reports/leaves-analytics'),
+      ]);
+
+      final deptData = results[0]['department_reports'] as List;
+      final leavesData = results[1]['leaves_analytics'] as Map<String, dynamic>;
+      final monthlyData = (results[1]['monthly_trends'] as List? ?? []);
+
+      final departments = deptData
+          .map((json) => DepartmentReport.fromJson(json))
+          .toList();
+      final monthlyLeaves = monthlyData
+          .map((json) => MonthlyLeaveStat.fromJson(json))
+          .toList();
+
+      emit(ReportLoaded(
+        departments: departments,
+        leavesAnalytics: leavesData,
+        monthlyLeaves: monthlyLeaves,
+      ));
+    } catch (e) {
+      emit(ReportError('Помилка завантаження звітів: ${e.toString()}'));
+    }
+  }
+}

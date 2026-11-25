@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employment Contract</title>
+    <style>
+        body { font-family: sans-serif; padding: 40px; line-height: 1.6; }
+        h1 { text-align: center; }
+        .footer { margin-top: 50px; }
+    </style>
+</head>
+<body>
+    <h1>EMPLOYMENT CONTRACT</h1>
+    <p>This contract is made between StaffFlow HRM and <strong>{{ emp.first_name }} {{ emp.last_name }}</strong>.</p>
+    <p><strong>Position:</strong> {{ emp.position }}</p>
+    <p><strong>Department:</strong> {{ emp.department.name if emp.department else 'Not assigned' }}</p>
+    <p><strong>Salary:</strong> {{ emp.salary }} UAH/month</p>
+    <p><strong>Start Date:</strong> {{ emp.hire_date }}</p>
+    
+    <div class="footer">
+        <p>Employer Signature: ___________________</p>
+        <p>Employee Signature: ___________________</p>
+    </div>
+</body>
+</html>

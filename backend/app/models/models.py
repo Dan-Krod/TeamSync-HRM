@@ -1,5 +1,7 @@
 from app import db
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+from datetime import datetime
 
 class Department(db.Model):
     __tablename__ = 'departments'
@@ -24,11 +26,19 @@ class Employee(db.Model):
     hire_date = db.Column(db.Date, nullable=False)
     role = db.Column(db.String(20), nullable=False) # admin, hr, manager, user
     department_id = db.Column(db.Integer, db.ForeignKey('departments.id'))
+    password_hash = db.Column(db.String(255), nullable=True)
+    work_schedule = db.relationship('WorkSchedule', backref='employee', uselist=False, lazy=True, cascade="all, delete-orphan")
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
 
-    leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True)
-    attendances = db.relationship('AttendanceRecord', backref='employee', lazy=True)
-    payrolls = db.relationship('Payroll', backref='employee', lazy=True)
-    documents = db.relationship('Document', backref='employee', lazy=True)
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    leave_requests = db.relationship('LeaveRequest', backref='employee', lazy=True, cascade="all, delete-orphan")
+    attendances = db.relationship('AttendanceRecord', backref='employee', lazy=True, cascade="all, delete-orphan")
+    payrolls = db.relationship('Payroll', backref='employee', lazy=True, cascade="all, delete-orphan")
+    documents = db.relationship('Document', backref='employee', lazy=True, cascade="all, delete-orphan")
 
 class LeaveRequest(db.Model):
     __tablename__ = 'leave_requests'
@@ -78,6 +88,19 @@ class PerformanceReview(db.Model):
     score = db.Column(db.Integer, nullable=False)
     comments = db.Column(db.Text)
 
+class Vacancy(db.Model):
+    __tablename__ = 'vacancies'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    department_id = db.Column(db.Integer, db.ForeignKey('departments.id'), nullable=True)
+    description = db.Column(db.Text)
+    salary_range = db.Column(db.String(50))
+    status = db.Column(db.String(20), default='open', nullable=False) 
+
+    department = db.relationship('Department', backref='vacancies', lazy=True)
+    candidates = db.relationship('Candidate', backref='vacancy', lazy=True)
+
 class Candidate(db.Model):
     __tablename__ = 'candidates'
     
@@ -85,3 +108,24 @@ class Candidate(db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False)
     resume_url = db.Column(db.String(255))
+    vacancy_id = db.Column(db.Integer, db.ForeignKey('vacancies.id'), nullable=True)
+    
+class TimeRecord(db.Model):
+    __tablename__ = 'time_records'
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False)
+    date = db.Column(db.Date, default=datetime.utcnow().date)
+    clock_in = db.Column(db.DateTime, default=datetime.utcnow)
+    clock_out = db.Column(db.DateTime, nullable=True)
+
+    employee = db.relationship('Employee', backref=db.backref('time_records', lazy=True))
+    
+class WorkSchedule(db.Model):
+    __tablename__ = 'work_schedules'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employees.id'), nullable=False, unique=True)
+    work_days = db.Column(db.String(50), default='Пн-Пт', nullable=False)
+    start_time = db.Column(db.String(10), default='09:00', nullable=False)
+    end_time = db.Column(db.String(10), default='18:00', nullable=False)
+    shift_type = db.Column(db.String(30), default='Офіс', nullable=False)

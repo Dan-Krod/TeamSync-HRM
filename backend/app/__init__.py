@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_marshmallow import Marshmallow
 from flasgger import Swagger
 from configure import Config
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
 db = SQLAlchemy()
 ma = Marshmallow()
@@ -11,6 +13,11 @@ swagger = Swagger()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    CORS(app)
+    
+    app.config['JWT_SECRET_KEY'] = 'super-secret-hrm-key-2026-very-secure' 
+    wt = JWTManager(app)
 
     db.init_app(app)
     ma.init_app(app)
@@ -24,11 +31,21 @@ def create_app(config_class=Config):
     from app.routes.leave_routes import leave_bp
     from app.routes.attendance_routes import attendance_bp
     from app.routes.candidate_routes import candidate_bp
+    from app.routes.auth_routes import auth_bp
+    from app.routes.time_routes import time_bp
+    from app.routes.document_routes import document_bp
+    from app.routes.payroll_routes import payroll_bp
+    from app.routes.review_routes import review_bp
     
     app.register_blueprint(employee_bp)
     app.register_blueprint(report_bp)
     app.register_blueprint(leave_bp)
     app.register_blueprint(attendance_bp)
     app.register_blueprint(candidate_bp)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(time_bp)
+    app.register_blueprint(document_bp)
+    app.register_blueprint(payroll_bp)
+    app.register_blueprint(review_bp)
 
     return app

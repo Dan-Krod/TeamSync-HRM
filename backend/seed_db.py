@@ -1,12 +1,12 @@
 from app import create_app, db
 from app.models.models import (Department, Employee, LeaveRequest, 
                                 AttendanceRecord, Payroll, Document, 
-                                PerformanceReview, Candidate)
+                                PerformanceReview, Candidate, Vacancy, WorkSchedule)
 from faker import Faker
 import random
 from datetime import timedelta, datetime
 
-fake = Faker('uk_UA')
+fake = Faker('en_US')
 app = create_app()
 
 def seed():
@@ -15,7 +15,7 @@ def seed():
         db.create_all()
 
         departments = []
-        dept_names = ['IT', 'HR', 'Фінанси', 'Маркетинг', 'Продажі']
+        dept_names = ['IT', 'HR', 'Finance', 'Marketing', 'Sales']
         for name in dept_names:
             dept = Department(name=name, description=fake.catch_phrase())
             db.session.add(dept)
@@ -23,8 +23,27 @@ def seed():
         db.session.commit()
 
         employees = []
+        admin_emp = Employee(
+            first_name="Main",
+            last_name="Admin",
+            email="admin@staff.com", 
+            phone="+1234567890",
+            position="Director",
+            salary=100000.00,
+            hire_date=fake.date_between(start_date='-5y', end_date='today'),
+            role='admin',            
+            department_id=departments[0].id
+        )
+        admin_emp.set_password('password123') 
+        db.session.add(admin_emp)
+        employees.append(admin_emp)
+
         roles = ['admin', 'hr', 'manager', 'user']
-        for _ in range(50):
+        role_weights = [2, 8, 15, 75] 
+
+        for _ in range(49):
+            random_password = fake.password(length=12, special_chars=True, digits=True, upper_case=True, lower_case=True)
+            
             emp = Employee(
                 first_name=fake.first_name(),
                 last_name=fake.last_name(),
@@ -33,13 +52,14 @@ def seed():
                 position=fake.job(),
                 salary=round(random.uniform(15000, 80000), 2),
                 hire_date=fake.date_between(start_date='-5y', end_date='today'),
-                role=random.choice(roles),
+                role=random.choices(roles, weights=role_weights, k=1)[0],
                 department_id=random.choice(departments).id
             )
+            emp.set_password("password123") 
             db.session.add(emp)
             employees.append(emp)
+            
         db.session.commit()
-
         manager_ids = [e.id for e in employees if e.role in ['admin', 'manager', 'hr']]
         if not manager_ids:
             manager_ids = [employees[0].id] 
@@ -96,17 +116,64 @@ def seed():
                     comments=fake.text(max_nb_chars=100)
                 )
                 db.session.add(review)
+                
+            if random.choice([True, False]):
+                review = PerformanceReview(
+                    employee_id=emp.id,
+                    reviewer_id=random.choice(manager_ids),
+                    score=random.randint(2, 5),
+                    comments=fake.text(max_nb_chars=100)
+                )
+                db.session.add(review)
+
+            # Додай цей блок сюди:
+            schedule_presets = [
+                ('Пн-Пт', '09:00', '18:00', 'Офіс'),
+                ('Пн-Пт', '10:00', '19:00', 'Гібрид'),
+                ('Пн-Пт', '08:00', '17:00', 'Дистанційно'),
+                ('2/2', '09:00', '21:00', 'Офіс'),
+            ]
+            days, st_time, en_time, sh_type = random.choice(schedule_presets)
+            schedule = WorkSchedule(
+                employee_id=emp.id,
+                work_days=days,
+                start_time=st_time,
+                end_time=en_time,
+                shift_type=sh_type
+            )
+            db.session.add(schedule)
+
+        vacancies = []
+        vacancy_titles = [
+            ('Senior Python Developer', '3500 - 4500 $', departments[0].id),
+            ('Flutter Web Developer', '2500 - 3500 $', departments[0].id),
+            ('HR Generalist', '1500 - 2000 $', departments[1].id),
+            ('Financial Analyst', '2000 - 2800 $', departments[2].id),
+            ('Digital Marketer', '1800 - 2500 $', departments[3].id),
+        ]
+        for title, salary, dept_id in vacancy_titles:
+            vac = Vacancy(
+                title=title,
+                department_id=dept_id,
+                description=fake.text(max_nb_chars=120),
+                salary_range=salary,
+                status=random.choice(['open', 'open', 'closed'])
+            )
+            db.session.add(vac)
+            vacancies.append(vac)
+        db.session.commit()
 
         for _ in range(15):
             candidate = Candidate(
                 full_name=f"{fake.first_name()} {fake.last_name()}",
                 status=random.choice(['pending', 'interviewed', 'hired', 'rejected']),
-                resume_url=fake.url()
+                resume_url=fake.url(),
+                vacancy_id=random.choice(vacancies).id
             )
             db.session.add(candidate)
 
         db.session.commit()
-        print("Базу даних успішно наповнено! Заповнено всі 8 таблиць.")
+        print("Database successfully seeded with English data!")
 
 if __name__ == '__main__':
     seed()
