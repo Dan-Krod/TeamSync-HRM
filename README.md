@@ -124,3 +124,71 @@ TeamSync-HRM/
     │   └── main.dart                     # Flutter entry point
     ├── pubspec.yaml                      # Flutter dependencies
     └── web/                              # Web build configuration
+```
+---
+## ⚙️ Local Setup & Installation
+### Prerequisites
+
+**Python 3.10+**
+**Flutter SDK 3.x+** (with Chrome installed for Web target)
+**Git**
+
+### 1. Clone the Repository
+
+```bash
+
+git clone [https://github.com/](https://github.com/)<your-username>/TeamSync-HRM.git
+
+cd TeamSync-HRM
+
+```
+
+### 2. Backend Setup (Flask)
+
+```bash
+
+cd backend
+
+# Create and activate a virtual environment
+python -m venv venv
+
+# Windows:
+venv\Scripts\activate
+
+# macOS / Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Initialize and seed the SQLite database
+python seed.py
+
+# Start the Flask development server (runs on [http://127.0.0.1:5000](http://127.0.0.1:5000))
+python run.py
+
+```
+### 3. Frontend Setup (Flutter Web)
+
+Open a new terminal window in the project root:
+
+```bash
+
+cd frontend
+
+# Install Flutter packages
+flutter pub get
+
+# Run the application in Chrome
+flutter run -d chrome
+
+```
+
+---
+
+## 🤝 Contact
+
+If you have any questions regarding the architecture, implementation, or setup of **TeamSync-HRM**, feel free to reach out:
+
+**GitHub:** [@Dan-Krod](https://github.com/Dan-Krod)
+**Repository:** [TeamSync-HRM](https://github.com/Dan-Krod/TeamSync-HRM)
