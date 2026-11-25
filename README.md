@@ -33,6 +33,11 @@ Illustrates the Layered Architecture, REST controllers, and the implementation o
 * 📄 [Read Class Architecture Documentation](docs/class_diagram.md)
 * 🖼️ **Diagram:** `docs/diagrams/class.png`
 
+### 3. Database Schema (ER Diagram)
+A robust relational database schema consisting of 8 tables, designed to support multiple business roles and modular scaling (e.g., isolated recruitment data).
+* 📄 [Read Database Schema Documentation](docs/database_schema.md)
+* 🖼️ **Diagram:** `docs/database/schema.png`
+
 ## 📂 Project Structure
 
 *(To be populated as the project evolves)*
