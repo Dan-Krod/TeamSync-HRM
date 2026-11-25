@@ -56,6 +56,14 @@ The backend is structured into four distinct layers (**API/Blueprints**, **Servi
 
   ![ER Diagram](docs/database/schema.png)
 
+- **HRM cabinet (UI):**
+
+  ![HRM cabinet](docs/ui/hrm_cabinet.png)
+
+- **Employee cabinet (UI):**
+
+  ![Employee cabinet](docs/ui/emp_cabinet.png)
+
 ---
 
 ## 📂 Project Structure
